@@ -89,7 +89,22 @@
 </div>
 
 </section>
+<section id="view-bids">
+  <h2>View Bids For My Load</h2>
 
+  <div class="card">
+    <label>Enter Your Load ID</label>
+    <input id="customerLoadId" placeholder="LOAD-003">
+
+    <br><br>
+
+    <button class="btn" type="button" onclick="showBidsForLoad()">
+      View Bids
+    </button>
+
+    <div id="bidResults"></div>
+  </div>
+</section> 
 <section id="drivers"> 
     <div class="card">
 <h3>Submit A Bid</h3>

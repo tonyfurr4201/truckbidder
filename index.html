@@ -125,8 +125,22 @@ const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxGRtsn9wBTmjAqFIhD7
 document.getElementById('loadForm').addEventListener('submit', async function(e) {
   e.preventDefault();
 
-  alert('Success! Load submitted.');
-});
+  const response = await fetch(WEBAPP_URL, {
+    method: 'POST',
+    body: JSON.stringify({
+      contactName: document.querySelectorAll('input')[0].value,
+      phoneEmail: document.querySelectorAll('input')[1].value,
+      pickupCity: document.querySelectorAll('input')[2].value,
+      deliveryCity: document.querySelectorAll('input')[3].value,
+      itemType: document.querySelector('select').value,
+      weight: document.querySelectorAll('input')[4].value,
+      deliveryDate: document.querySelector('input[type="date"]').value,
+      budget: document.querySelectorAll('input')[5].value,
+      details: document.querySelector('textarea').value
+    })
+  });
+
+  alert('Load submitted!');
 </script>
 </body>
 </html>

@@ -60,7 +60,7 @@
 
   <section id="post">
     <h2>Post a Load</h2>
-    <form onsubmit="event.preventDefault(); alert('This demo form is ready. Next step is connecting it to a database.');">
+    <form id="loadForm"> 
       <div class="form-grid">
         <div><label>Your Name</label><input placeholder="Contact Name" required></div>
         <div><label>Phone / Email</label><input placeholder="Phone or email" required></div>
@@ -119,5 +119,19 @@
     <p><b>TruckBid</b> — Freight bidding for equipment, attachments, materials, and heavy items.</p>
     <p>© 2026 TruckBid. Built for demo use.</p>
   </footer>
+        <script>
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxGRtsn9wBTmjAqFIhD7iwqfzzQ2dHooe_iO0LUROJIwBPsSS1qu2l3Qs79im_RAxdg/exec";
+
+document.getElementById('loadForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  alert('Success! Load submitted.');
+});
+</script>
 </body>
 </html>
+
+
+
+
+

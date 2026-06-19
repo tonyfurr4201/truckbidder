@@ -225,7 +225,36 @@ document.getElementById('bidForm').addEventListener('submit', async function(e) 
     `;
   });
 }
+async function showBidsForLoad() {
 
+  const loadId = document.getElementById('customerLoadId').value;
+
+  const response = await fetch(WEBAPP_URL + '?loadId=' + loadId);
+
+  const bids = await response.json();
+
+  let html = '<h3>Bids Received</h3>';
+
+  bids.forEach(function(bid) {
+
+    html += `
+      <div class="card">
+        <p><b>Driver:</b> ${bid[2]}</p>
+        <p><b>Phone:</b> ${bid[3]}</p>
+        <p><b>Bid Amount:</b> $${bid[4]}</p>
+        <p><b>Notes:</b> ${bid[5]}</p>
+
+        <button class="btn">
+          Accept Bid
+        </button>
+      </div>
+    `;
+
+  });
+
+  document.getElementById('bidResults').innerHTML = html;
+
+} 
 loadOpenLoads();   
 </script>
 </body>

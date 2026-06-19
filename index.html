@@ -119,31 +119,32 @@
     <p><b>TruckBid</b> — Freight bidding for equipment, attachments, materials, and heavy items.</p>
     <p>© 2026 TruckBid. Built for demo use.</p>
   </footer>
-        <script>
-const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxGRtsn9wBTmjAqFIhD7iwqfzzQ2dHooe_iO0LUROJIwBPsSS1qu2l3Qs79im_RAxdg/exec";
+      const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxGRtsn9wBTmjAqFIhD7iwqfzzQ2dHooe_iO0LUROJIwBPsSS1qu2l3Qs79im_RAxdg/exec";
 
 document.getElementById('loadForm').addEventListener('submit', async function(e) {
   e.preventDefault();
 
-  const response = await fetch(WEBAPP_URL, {
+  await fetch(WEBAPP_URL, {
     method: 'POST',
+    mode: 'no-cors',
     body: JSON.stringify({
-      contactName: document.querySelectorAll('input')[0].value,
-      phoneEmail: document.querySelectorAll('input')[1].value,
-      pickupCity: document.querySelectorAll('input')[2].value,
-      deliveryCity: document.querySelectorAll('input')[3].value,
+      contactName: document.querySelector('input[placeholder="Contact Name"]').value,
+      phoneEmail: document.querySelector('input[placeholder="Phone or email"]').value,
+      pickupCity: document.querySelector('input[placeholder="Concord, NC"]').value,
+      deliveryCity: document.querySelector('input[placeholder="Atlanta, GA"]').value,
       itemType: document.querySelector('select').value,
-      weight: document.querySelectorAll('input')[4].value,
+      weight: document.querySelector('input[placeholder="Example: 1,500 lbs"]').value,
       deliveryDate: document.querySelector('input[type="date"]').value,
-      budget: document.querySelectorAll('input')[5].value,
+      budget: document.querySelector('input[placeholder="Example: $450"]').value,
       details: document.querySelector('textarea').value
     })
-});
-  
-});
+  });
 
   alert('Load submitted!');
+});
 </script>
+</body>
+</html>   
 </body>
 </html>
 

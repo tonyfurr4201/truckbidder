@@ -189,12 +189,40 @@ document.getElementById('bidForm').addEventListener('submit', async function(e) 
   });
 
   alert('Bid submitted!');
-});     
+});
+  async function loadOpenLoads() {
+  const response = await fetch(WEBAPP_URL);
+  const rows = await response.json();
+
+  const container = document.querySelector('#loads .cards');
+  container.innerHTML = '';
+
+  rows.slice(1).forEach(function(row) {
+    const loadId = row[1];
+    const pickup = row[4];
+    const delivery = row[5];
+    const itemType = row[6];
+    const weight = row[7];
+    const budget = row[9];
+
+    container.innerHTML += `
+      <div class="card load-card">
+        <span class="badge">Open for bids</span>
+        <h3>${loadId} - ${itemType}</h3>
+        <p><b>Route:</b> ${pickup} to ${delivery}</p>
+        <p><b>Weight:</b> ${weight}</p>
+        <p><b>Budget:</b> $${budget}</p>
+        <a class="btn" href="#drivers">Bid on this Load</a>
+      </div>
+    `;
+  });
+}
+
+loadOpenLoads();   
 </script>
 </body>
 </html>   
-</body>
-</html>
+
 
 
 

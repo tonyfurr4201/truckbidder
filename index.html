@@ -123,7 +123,10 @@
 <form id="bidForm">
 
 <label>Load ID</label>
-<input placeholder="LOAD-001">
+<div style="display:flex;align-items:center;">
+<span style="padding:8px 12px;background:#f3f3f3;border:1px solid #ccc;border-right:none;">LOAD-</span>
+<input placeholder="001" maxlength="3">
+</div>
 
 <label>Driver Name</label>
 <input placeholder="Your Name">
@@ -200,13 +203,14 @@ document.getElementById('bidForm').addEventListener('submit', async function(e) 
     method: 'POST',
     mode: 'no-cors',
     body: JSON.stringify({
-      type: "bid",
-      loadId: document.querySelector('input[placeholder="LOAD-001"]').value,
-      driverName: document.querySelector('input[placeholder="Your Name"]').value,
-      phone: document.querySelector('input[placeholder="Phone Number"]').value,
-      bidAmount: document.querySelector('input[placeholder="$450"]').value,
-      notes: document.querySelector('textarea[placeholder="Equipment type, route, notes"]').value
-    })
+     
+  type: "bid",
+loadId: 'LOAD-' + document.querySelector('input[placeholder="001"]').value.padStart(3, '0'),
+driverName: document.querySelector('input[placeholder="Your Name"]').value,
+phone: document.querySelector('input[placeholder="Phone Number"]').value,
+bidAmount: document.querySelector('input[placeholder="$450"]').value,
+notes: document.querySelector('textarea[placeholder="Equipment type, route, notes"]').value
+
 });
 
 alert('Bid submitted!');

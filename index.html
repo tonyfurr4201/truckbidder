@@ -183,7 +183,7 @@ phone: document.querySelector('input[placeholder="Phone"]').value,
       itemType: document.querySelector('select').value,
       weight: document.querySelector('input[placeholder="Example: 1,500 lbs"]').value,
       deliveryDate: document.querySelector('input[type="date"]').value,
-      budget: document.querySelector('input[placeholder="Example: $450"]').value,
+      <input placeholder="Example: $450" required>
       details: document.querySelector('textarea').value
     })
   });
@@ -216,12 +216,12 @@ document.getElementById('bidForm').addEventListener('submit', async function(e) 
   container.innerHTML = '';
 
   rows.slice(1).forEach(function(row) {
-    const loadId = row[1];
-    const pickup = row[4];
-    const delivery = row[5];
-    const itemType = row[6];
-    const weight = row[7];
-    const budget = row[9];
+ const loadId = row[1];
+const pickup = row[5];
+const delivery = row[6];
+const itemType = row[7];
+const weight = row[8];
+const budget = row[10];
 
     container.innerHTML += `
       <div class="card load-card">

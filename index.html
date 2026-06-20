@@ -234,7 +234,7 @@ document.getElementById('bidForm').addEventListener('submit', async function(e) 
       </div>
     `;
   });
-}async function showBidsForLoad() {
+async function showBidsForLoad() {
   const loadId = document.getElementById('customerLoadId').value;
   const response = await fetch(WEBAPP_URL + '?loadId=' + loadId);
   const bids = await response.json();

@@ -234,6 +234,7 @@ const budget = row[10];
       </div>
     `;
   });
+  }  
 async function showBidsForLoad() {
   const loadId = document.getElementById('customerLoadId').value;
   const response = await fetch(WEBAPP_URL + '?loadId=' + loadId);

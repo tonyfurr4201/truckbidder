@@ -210,10 +210,8 @@ driverName: document.querySelector('input[placeholder="Your Name"]').value,
 phone: document.querySelector('input[placeholder="Phone Number"]').value,
 bidAmount: document.querySelector('input[placeholder="$450"]').value,
 notes: document.querySelector('textarea[placeholder="Equipment type, route, notes"]').value
-
+})
 });
-
-alert('Bid submitted!');
 });
   async function loadOpenLoads() {
   const response = await fetch(WEBAPP_URL);

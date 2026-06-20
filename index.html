@@ -102,7 +102,7 @@
 
   <div class="card">
     <label>Enter Your Load ID</label>
-    <input id="customerLoadId" placeholder="LOAD-003">
+    <input id="customerLoadId" placeholder="012" maxlength="3">
 
     <br><br>
 
@@ -236,7 +236,7 @@ const budget = row[10];
   });
   }  
 async function showBidsForLoad() {
-  const loadId = document.getElementById('customerLoadId').value;
+  const loadId = 'LOAD-' + document.getElementById('customerLoadId').value.padStart(3, '0');
   const response = await fetch(WEBAPP_URL + '?loadId=' + loadId);
   const bids = await response.json();
 

@@ -143,7 +143,8 @@ Submit Bid
       <div class="form-grid">
         <div><label>Name</label><input required></div>
         <div><label>Email or Phone</label><input required></div>
-        <div><label>I am a...</label><select><option>Customer needing shipping</option><option>Driver / hauler</option><option>Equipment dealer</option></select></div>
+        <div><label>Email</label><input required placeholder="Email"></div>
+<div><label>Phone</label><input required placeholder="Phone"></div>
       </div>
       <br>
       <label>Message</label>
@@ -167,7 +168,8 @@ document.getElementById('loadForm').addEventListener('submit', async function(e)
     mode: 'no-cors',
     body: JSON.stringify({
       contactName: document.querySelector('input[placeholder="Contact Name"]').value,
-      phoneEmail: document.querySelector('input[placeholder="Phone or email"]').value,
+      email: document.querySelector('input[placeholder="Email"]').value,
+phone: document.querySelector('input[placeholder="Phone"]').value, 
       pickupCity: document.querySelector('input[placeholder="Concord, NC"]').value,
       deliveryCity: document.querySelector('input[placeholder="Atlanta, GA"]').value,
       itemType: document.querySelector('select').value,

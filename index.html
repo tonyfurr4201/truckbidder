@@ -204,9 +204,9 @@ document.getElementById('bidForm').addEventListener('submit', async function(e) 
       bidAmount: document.querySelector('input[placeholder="$450"]').value,
       notes: document.querySelector('textarea[placeholder="Equipment type, route, notes"]').value
     })
-  });
+});
 
-  alert('Bid submitted!');
+alert('Bid submitted!');
 });
   async function loadOpenLoads() {
   const response = await fetch(WEBAPP_URL);

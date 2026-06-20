@@ -223,10 +223,13 @@ notes: document.querySelector('textarea[placeholder="Equipment type, route, note
   rows.slice(1).forEach(function(row) {
    
 const loadStatus = row[11];
+const budgetStatus = row[10];
 
-if (loadStatus === 'COMPLETED') {
+if (loadStatus === 'COMPLETED' || budgetStatus === 'COMPLETED') {
 return;
 }
+
+
 
 const loadId = row[1]; 
 

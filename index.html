@@ -239,7 +239,7 @@ document.getElementById('bidForm').addEventListener('submit', async function(e) 
         <p><b>Bid Amount:</b> $${bid[4]}</p>
         <p><b>Notes:</b> ${bid[5]}</p>
 
-        <button class="btn" onclick="acceptBid('${bid[1]}','${bid[2]}')"> 
+        <button class="btn" onclick="acceptBid('${bid[1]}','${bid[2]}')">  
           Accept Bid
         </button>
       </div>
@@ -248,15 +248,15 @@ document.getElementById('bidForm').addEventListener('submit', async function(e) 
 
   document.getElementById('bidResults').innerHTML = html;
 } 
-async function acceptBid(loadId, driverName) {
+async function acceptBid(loadId, driverName) { 
   await fetch(WEBAPP_URL, {
     method: 'POST',
     mode: 'no-cors',
     body: JSON.stringify({
-      type: 'acceptBid',
-      loadId: loadId,
-      driverName: driverName
-    })
+  type: 'acceptBid',
+  loadId: loadId,
+  driverName: driverName
+}) 
   });
 
   alert('Bid accepted!');

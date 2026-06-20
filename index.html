@@ -224,19 +224,14 @@ document.getElementById('bidForm').addEventListener('submit', async function(e) 
       </div>
     `;
   });
-}
-async function showBidsForLoad() {
-
+}async function showBidsForLoad() {
   const loadId = document.getElementById('customerLoadId').value;
-
   const response = await fetch(WEBAPP_URL + '?loadId=' + loadId);
-
   const bids = await response.json();
 
   let html = '<h3>Bids Received</h3>';
 
   bids.forEach(function(bid) {
-
     html += `
       <div class="card">
         <p><b>Driver:</b> ${bid[2]}</p>
@@ -244,17 +239,30 @@ async function showBidsForLoad() {
         <p><b>Bid Amount:</b> $${bid[4]}</p>
         <p><b>Notes:</b> ${bid[5]}</p>
 
-        <button class="btn">
+        <button class="btn" onclick="acceptBid('${bid[1]}','${bid[2]}')"> 
           Accept Bid
         </button>
       </div>
     `;
-
   });
 
   document.getElementById('bidResults').innerHTML = html;
-
 } 
+async function acceptBid(loadId, driverName) {
+  await fetch(WEBAPP_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    body: JSON.stringify({
+      type: 'acceptBid',
+      loadId: loadId,
+      driverName: driverName
+    })
+  });
+
+  alert('Bid accepted!');
+} 
+
+
 loadOpenLoads();   
 </script>
 </body>

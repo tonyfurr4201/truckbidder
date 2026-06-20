@@ -221,7 +221,15 @@ notes: document.querySelector('textarea[placeholder="Equipment type, route, note
   container.innerHTML = '';
 
   rows.slice(1).forEach(function(row) {
- const loadId = row[1];
+   
+const loadStatus = row[11];
+
+if (loadStatus === 'COMPLETED') {
+return;
+}
+
+const loadId = row[1]; 
+
 const pickup = row[5];
 const delivery = row[6];
 const itemType = row[7];

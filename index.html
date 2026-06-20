@@ -235,7 +235,7 @@ const budget = row[10];
         <p><b>Route:</b> ${pickup} to ${delivery}</p>
         <p><b>Weight:</b> ${weight}</p>
         <p><b>Budget:</b> $${budget}</p>
-        <a class="btn" href="#drivers" onclick="document.querySelector('input[placeholder=&quot;LOAD-001&quot;]').value='${loadId}'">Bid on this Load</a>
+       <a class="btn" href="#drivers" onclick="document.querySelector('input[placeholder=&quot;001&quot;]').value='${loadId}'.replace('LOAD-','')">Bid on this Load</a>
       </div>
     `;
   });

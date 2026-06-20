@@ -231,20 +231,29 @@ document.getElementById('bidForm').addEventListener('submit', async function(e) 
 
   let html = '<h3>Bids Received</h3>';
 
-  bids.forEach(function(bid) {
-    html += `
-      <div class="card">
-        <p><b>Driver:</b> ${bid[2]}</p>
-        <p><b>Phone:</b> ${bid[3]}</p>
-        <p><b>Bid Amount:</b> $${bid[4]}</p>
-        <p><b>Notes:</b> ${bid[5]}</p>
+ bids.forEach(function(bid) {
+  const decision = bid[7] || '';
 
-        <button class="btn" onclick="acceptBid('${bid[1]}','${bid[2]}')"> 
-          Accept Bid
-        </button>
-      </div>
-    `;
-  });
+  let actionHtml = '<button class="btn" onclick="acceptBid(\'' + bid[1] + '\',\'' + bid[2] + '\')">Accept Bid</button>';
+
+  if (decision === 'ACCEPTED') {
+    actionHtml = '<p><b>Status:</b> ACCEPTED</p>';
+  }
+
+  if (decision === 'REJECTED') {
+    actionHtml = '<p><b>Status:</b> REJECTED</p>';
+  }
+
+  html += `
+    <div class="card">
+      <p><b>Driver:</b> ${bid[2]}</p>
+      <p><b>Phone:</b> ${bid[3]}</p>
+      <p><b>Bid Amount:</b> $${bid[4]}</p>
+      <p><b>Notes:</b> ${bid[5]}</p>
+      ${actionHtml}
+    </div>
+  `;
+}); 
 
   document.getElementById('bidResults').innerHTML = html;
 } 

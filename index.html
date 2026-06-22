@@ -158,11 +158,9 @@ Submit Bid
     <p>© 2026 BidAndTruckit. </p>
   </footer>
 <script>
-<script>
 const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxGRtsn9wBTmjAqFIhD7iwqfzzQ2dHooe_iO0LUROJIwBPsSS1qu2l3Qs79im_RAxdg/exec";
 
 // ===== Loads Open For Bids (CSV read) =====
-const LOADS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQaD-4n_6IEp76TwCs3TyojCYFK-Jzyc5yJvDDvS9ZbN7RgLtfdVMuFyMKPZ7xo5b7Q9x0J3KvVK0Zs/pub?gid=0&single=true&output=csv";
 
 function parseCSV_simple(text) {
   const rows = [];
@@ -200,13 +198,8 @@ async function loadOpenLoads() {
   cards.innerHTML = "<p>Loading loads…</p>";
 
   try {
-    const res = await fetch(LOADS_CSV_URL, { cache: "no-store" });
-    const csv = await res.text();
-    const table = parseCSV_simple(csv);
-    const rows = table.slice(1);
-
-    // Status column index here is 10 (0-based) based on your sheet design
-    const open = rows.filter(r => String(r[10] || "").trim().toUpperCase() === "OPEN");
+const res = await fetch(WEBAPP_URL + "?action=loads");
+const open = await res.json();
 
     if (!open.length) {
       cards.innerHTML = "<p>No OPEN loads right now.</p>";
@@ -355,8 +348,6 @@ document.addEventListener("DOMContentLoaded", () => {
   wireBidForm();
   loadOpenLoads();
 });
-</script>
-
 </script>
 </body>
 </html>   

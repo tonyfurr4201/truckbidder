@@ -196,7 +196,6 @@ async function loadOpenLoads() {
   if (!cards) return;
 
   cards.innerHTML = "<p>Loading loads…</p>";
-
   try {
 const res = await fetch(LOADS_CSV_URL, { cache: "no-store" });
 const csv = await res.text();

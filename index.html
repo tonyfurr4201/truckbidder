@@ -159,7 +159,7 @@ Submit Bid
   </footer>
 <script>
 const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxGRtsn9wBTmjAqFIhD7iwqfzzQ2dHooe_iO0LUROJIwBPsSS1qu2l3Qs79im_RAxdg/exec";
-
+const LOADS_CSV_URL = "PASTE_YOUR_PUBLISHED_LOADS_CSV_LINK_HERE";
 // ===== Loads Open For Bids (CSV read) =====
 
 function parseCSV_simple(text) {
@@ -198,9 +198,11 @@ async function loadOpenLoads() {
   cards.innerHTML = "<p>Loading loads…</p>";
 
   try {
-const res = await fetch(WEBAPP_URL + "?action=loads");
-const open = await res.json();
-
+const res = await fetch(LOADS_CSV_URL, { cache: "no-store" });
+const csv = await res.text();
+const table = parseCSV_simple(csv);
+const rows = table.slice(1);
+const open = rows.filter(r => String(r[10] || "").trim().toUpperCase() === "OPEN");
     if (!open.length) {
       cards.innerHTML = "<p>No OPEN loads right now.</p>";
       return;

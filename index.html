@@ -158,250 +158,8 @@ Submit Bid
     <p>© 2026 BidAndTruckit. </p>
   </footer>
 <script>
+<script>
 const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxGRtsn9wBTmjAqFIhD7iwqfzzQ2dHooe_iO0LUROJIwBPsSS1qu2l3Qs79im_RAxdg/exec";
-
-document.getElementById('loadForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-
-  await fetch(WEBAPP_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    body: JSON.stringify({
-      action: "addLoad",
-      contactName: document.querySelector('input[placeholder="Contact Name"]').value,
-      email: document.querySelector('input[placeholder="Email"]').value,
-      phone: document.querySelector('input[placeholder="Phone"]').value,
-      pickupCity: document.querySelector('input[placeholder="Concord, NC"]').value,
-      deliveryCity: document.querySelector('input[placeholder="Atlanta, GA"]').value,
-      itemType: document.querySelector('select').value,
-      weight: document.querySelector('input[placeholder="Example: 1,500 lbs"]').value,
-      deliveryDate: document.querySelector('input[type="date"]').value,
-      budget: document.querySelector('input[placeholder="Example: $450"]').value,
-      details: document.querySelector('textarea').value
-    })
-  });
-
-  alert("Load submitted!");
-});
-</script>
-
-      body: JSON.stringify({
-        contactName: document.querySelector('input[placeholder="Contact Name"]').value,
-        email: document.querySelector('input[placeholder="Email"]').value,
-        phone: document.querySelector('input[placeholder="Phone"]').value,
-        pickupCity: document.querySelector('input[placeholder="Concord, NC"]').value,
-        deliveryCity: document.querySelector('input[placeholder="Atlanta, GA"]').value,
-        itemType: document.querySelector('select').value,
-        weight: document.querySelector('input[placeholder="Example: 1,500 lbs"]').value,
-        deliveryDate: document.querySelector('input[type="date"]').value,
-        budget: document.querySelector('input[placeholder="Example: $450"]').value,
-        details: document.querySelector('#loadForm textarea').value
-      })
-    });
-
-    alert('Load submitted!');
-    // Refresh the open loads list after posting
-    loadOpenLoads();
-});
-
-  alert('Load submitted!');
-});
-document.getElementById('bidForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  // --- Submit Bid ---
-  document.getElementById('bidForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-
-    const loadNum = document.querySelector('input[placeholder="001"]').value;
-    const loadId = 'LOAD-' + String(loadNum).padStart(3, '0');
-
-    await fetch(WEBAPP_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      body: JSON.stringify({
-        type: "bid",
-        loadId: loadId,
-        driverName: document.querySelector('input[placeholder="Your Name"]').value,
-        phone: document.querySelector('input[placeholder="Phone Number"]').value,
-        bidAmount: document.querySelector('input[placeholder="$450"]').value,
-        notes: document.querySelector('textarea[placeholder="Equipment type, route, notes"]').value
-      })
-    });
-
-    alert('Bid submitted!');
-  });
-
-  await fetch(WEBAPP_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    body: JSON.stringify({
-     
-  type: "bid",
-loadId: 'LOAD-' + document.querySelector('input[placeholder="001"]').value.padStart(3, '0'),
-driverName: document.querySelector('input[placeholder="Your Name"]').value,
-phone: document.querySelector('input[placeholder="Phone Number"]').value,
-bidAmount: document.querySelector('input[placeholder="$450"]').value,
-notes: document.querySelector('textarea[placeholder="Equipment type, route, notes"]').value
-})
-});
-});
-  // --- Load OPEN loads only ---
-async function loadOpenLoads() {
-  const response = await fetch(WEBAPP_URL);
-  const rows = await response.json();
-
-  const container = document.querySelector('#loads .cards');
-  container.innerHTML = '';
-
-  rows.slice(1).forEach(function(row) {
-   
-const loadStatus = row[11];
-const budgetStatus = row[10];
-
-if (loadStatus === 'COMPLETED' || budgetStatus === 'COMPLETED') {
-return;
-}
-
-    const response = await fetch(WEBAPP_URL);
-    const rows = await response.json();
-
-    const container = document.querySelector('#loads .cards');
-    container.innerHTML = '';
-
-    rows.slice(1).forEach(function(row) {
-      // Apps Script returns: ... status at index 10
-      const loadStatus = String(row[10] || '').trim().toUpperCase(); // OPEN / AWARDED
-      if (loadStatus !== 'OPEN') return;
-
-      const loadId = row[1];
-      const pickup = row[5];
-      const delivery = row[6];
-      const itemType = row[7];
-      const weight = row[8];
-
-      container.innerHTML += `
-        <div class="card load-card">
-          <span class="badge">Open for bids</span>
-          <h3>${loadId} - ${itemType}</h3>
-          <p><b>Route:</b> ${pickup} to ${delivery}</p>
-          <p><b>Weight:</b> ${weight}</p>
-          <a class="btn" href="#drivers"
-             onclick="document.querySelector('input[placeholder=&quot;001&quot;]').value='${loadId}'.replace('LOAD-','')">
-             Bid on this Load
-          </a>
-        </div>
-      `;
-    });
-  }
-
-  // --- Customer views bids for a load ---
-  async function showBidsForLoad() {
-    const loadId = 'LOAD-' + document.getElementById('customerLoadId').value.padStart(3, '0');
-    const response = await fetch(WEBAPP_URL + '?loadId=' + loadId);
-    const bids = await response.json();
-
-const loadId = row[1]; 
-    let html = '<h3>Bids Received</h3>';
-
-const pickup = row[5];
-const delivery = row[6];
-const itemType = row[7];
-const weight = row[8];
-const budget = row[10];
-    bids.forEach(function(bid) {
-      // Bids columns: 0 ts, 1 loadId, 2 driver, 3 phone, 4 amount, 5 notes, 6 status
-      const decision = bid[6] || '';
-
-    container.innerHTML += `
-      <div class="card load-card">
-        <span class="badge">Open for bids</span>
-        <h3>${loadId} - ${itemType}</h3>
-        <p><b>Route:</b> ${pickup} to ${delivery}</p>
-        <p><b>Weight:</b> ${weight}</p>
-        <p><b>Budget:</b> $${budget}</p>
-       <a class="btn" href="#drivers" onclick="document.querySelector('input[placeholder=&quot;001&quot;]').value='${loadId}'.replace('LOAD-','')">Bid on this Load</a>
-      </div>
-    `;
-  });
-  }  
-async function showBidsForLoad() {
-  const loadId = 'LOAD-' + document.getElementById('customerLoadId').value.padStart(3, '0');
-  const response = await fetch(WEBAPP_URL + '?loadId=' + loadId);
-  const bids = await response.json();
-      let actionHtml =
-        '<button class="btn" onclick="acceptBid(\'' + bid[1] + '\',\'' + bid[2] + '\')">Accept Bid</button>';
-
-  let html = '<h3>Bids Received</h3>';
-      if (decision === 'ACCEPTED') actionHtml = '<p><b>Status:</b> ACCEPTED</p>';
-      if (decision === 'REJECTED') actionHtml = '<p><b>Status:</b> REJECTED</p>';
-
- bids.forEach(function(bid) {
-  const decision = bid[7] || '';
-      html += `
-        <div class="card">
-          <p><b>Driver:</b> ${bid[2]}</p>
-          <p><b>Phone:</b> ${bid[3]}</p>
-          <p><b>Bid Amount:</b> $${bid[4]}</p>
-          <p><b>Notes:</b> ${bid[5]}</p>
-          ${actionHtml}
-        </div>
-      `;
-    });
-
-  let actionHtml = '<button class="btn" onclick="acceptBid(\'' + bid[1] + '\',\'' + bid[2] + '\')">Accept Bid</button>';
-
-  if (decision === 'ACCEPTED') {
-    actionHtml = '<p><b>Status:</b> ACCEPTED</p>';
-    document.getElementById('bidResults').innerHTML = html;
-}
-
-  if (decision === 'REJECTED') {
-    actionHtml = '<p><b>Status:</b> REJECTED</p>';
-  // --- Accept a bid ---
-  async function acceptBid(loadId, driverName) {
-    await fetch(WEBAPP_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      body: JSON.stringify({
-        type: 'acceptBid',
-        loadId: loadId,
-        driverName: driverName
-      })
-    });
-
-    alert('Bid accepted!');
-    // Refresh bids + open loads after accepting
-    showBidsForLoad();
-    loadOpenLoads();
-}
-
-  html += `
-    <div class="card">
-      <p><b>Driver:</b> ${bid[2]}</p>
-      <p><b>Phone:</b> ${bid[3]}</p>
-      <p><b>Bid Amount:</b> $${bid[4]}</p>
-      <p><b>Notes:</b> ${bid[5]}</p>
-      ${actionHtml}
-    </div>
-  `;
-}); 
-
-  document.getElementById('bidResults').innerHTML = html;
-} 
-async function acceptBid(loadId, driverName) {
-  await fetch(WEBAPP_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    body: JSON.stringify({
-      type: 'acceptBid',
-      loadId: loadId,
-      driverName: driverName
-    })
-  });
-
-  alert('Bid accepted!');
-} 
-
 
 // ===== Loads Open For Bids (CSV read) =====
 const LOADS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQaD-4n_6IEp76TwCs3TyojCYFK-Jzyc5yJvDDvS9ZbN7RgLtfdVMuFyMKPZ7xo5b7Q9x0J3KvVK0Zs/pub?gid=0&single=true&output=csv";
@@ -418,7 +176,6 @@ function parseCSV_simple(text) {
 
     if (c === '"' && inQuotes && next === '"') { cur += '"'; i++; continue; }
     if (c === '"') { inQuotes = !inQuotes; continue; }
-
     if (c === "," && !inQuotes) { row.push(cur); cur = ""; continue; }
 
     if ((c === "\n" || c === "\r") && !inQuotes) {
@@ -428,13 +185,11 @@ function parseCSV_simple(text) {
       row = [];
       continue;
     }
-
     cur += c;
   }
 
   row.push(cur);
   if (row.length > 1 || row[0] !== "") rows.push(row);
-
   return rows;
 }
 
@@ -450,8 +205,7 @@ async function loadOpenLoads() {
     const table = parseCSV_simple(csv);
     const rows = table.slice(1);
 
-    // Expected Loads columns (0-based):
-    // 1 Load ID, 5 Pickup, 6 Delivery, 7 Item Type, 8 Weight, 9 Delivery Date, 10 Status
+    // Status column index here is 10 (0-based) based on your sheet design
     const open = rows.filter(r => String(r[10] || "").trim().toUpperCase() === "OPEN");
 
     if (!open.length) {
@@ -468,13 +222,16 @@ async function loadOpenLoads() {
       const deliveryDate = (r[9] || "").trim();
 
       return `
-        <div class="card">
-          <h3>${loadId}</h3>
-          <p><strong>Pickup:</strong> ${pickup}</p>
-          <p><strong>Delivery:</strong> ${delivery}</p>
-          <p><strong>Item:</strong> ${itemType}</p>
-          <p><strong>Weight:</strong> ${weight}</p>
-          <p><strong>Delivery Date:</strong> ${deliveryDate}</p>
+        <div class="card load-card">
+          <span class="badge">Open for bids</span>
+          <h3>${loadId} - ${itemType}</h3>
+          <p><b>Route:</b> ${pickup} to ${delivery}</p>
+          <p><b>Weight:</b> ${weight}</p>
+          <p><b>Delivery Date:</b> ${deliveryDate}</p>
+          <a class="btn" href="#drivers"
+             onclick="document.getElementById('bidLoadNum').value='${loadId.replace("LOAD-","")}'">
+             Bid on this Load
+          </a>
         </div>
       `;
     }).join("");
@@ -485,10 +242,120 @@ async function loadOpenLoads() {
   }
 }
 
-// Call it once on page load
+// ===== Submit Load =====
+function wireLoadForm() {
+  const form = document.getElementById("loadForm");
+  if (!form) return;
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    await fetch(WEBAPP_URL, {
+      method: "POST",
+      mode: "no-cors",
+      body: JSON.stringify({
+        action: "addLoad",
+        contactName: document.querySelector('input[placeholder="Contact Name"]').value,
+        email: document.querySelector('input[placeholder="Email"]').value,
+        phone: document.querySelector('input[placeholder="Phone"]').value,
+        pickupCity: document.querySelector('input[placeholder="Concord, NC"]').value,
+        deliveryCity: document.querySelector('input[placeholder="Atlanta, GA"]').value,
+        itemType: document.querySelector("#loadForm select").value,
+        weight: document.querySelector('input[placeholder="Example: 1,500 lbs"]').value,
+        deliveryDate: document.querySelector('#loadForm input[type="date"]').value,
+        budget: document.querySelector('input[placeholder="Example: $450"]').value,
+        details: document.querySelector('#loadForm textarea').value
+      })
+    });
+
+    alert("Load submitted!");
+    loadOpenLoads();
+    form.reset();
+  });
+}
+
+// ===== Submit Bid =====
+function wireBidForm() {
+  const form = document.getElementById("bidForm");
+  if (!form) return;
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const loadNum = document.getElementById("bidLoadNum").value;
+    const loadId = "LOAD-" + String(loadNum).padStart(3, "0");
+
+    await fetch(WEBAPP_URL, {
+      method: "POST",
+      mode: "no-cors",
+      body: JSON.stringify({
+        type: "bid",
+        loadId,
+        driverName: document.querySelector('input[placeholder="Your Name"]').value,
+        phone: document.querySelector('input[placeholder="Phone Number"]').value,
+        bidAmount: document.querySelector('input[placeholder="$450"]').value,
+        notes: document.querySelector('textarea[placeholder="Equipment type, route, notes"]').value
+      })
+    });
+
+    alert("Bid submitted!");
+    form.reset();
+  });
+}
+
+// ===== View Bids =====
+async function showBidsForLoad() {
+  const loadId = "LOAD-" + document.getElementById("customerLoadId").value.padStart(3, "0");
+  const res = await fetch(WEBAPP_URL + "?loadId=" + encodeURIComponent(loadId));
+  const bids = await res.json();
+
+  let html = "<h3>Bids Received</h3>";
+
+  bids.forEach((bid) => {
+    // Bids: 0 ts, 1 loadId, 2 driver, 3 phone, 4 amount, 5 notes, 6 status
+    const decision = bid[6] || "";
+
+    let actionHtml = `<button class="btn" onclick="acceptBid('${bid[1]}','${bid[2]}')">Accept Bid</button>`;
+    if (decision === "ACCEPTED") actionHtml = "<p><b>Status:</b> ACCEPTED</p>";
+    if (decision === "REJECTED") actionHtml = "<p><b>Status:</b> REJECTED</p>";
+
+    html += `
+      <div class="card">
+        <p><b>Driver:</b> ${bid[2]}</p>
+        <p><b>Phone:</b> ${bid[3]}</p>
+        <p><b>Bid Amount:</b> ${bid[4]}</p>
+        <p><b>Notes:</b> ${bid[5]}</p>
+        ${actionHtml}
+      </div>
+    `;
+  });
+
+  document.getElementById("bidResults").innerHTML = html;
+}
+
+async function acceptBid(loadId, driverName) {
+  await fetch(WEBAPP_URL, {
+    method: "POST",
+    mode: "no-cors",
+    body: JSON.stringify({
+      type: "acceptBid",
+      loadId,
+      driverName
+    })
+  });
+
+  alert("Bid accepted!");
+  showBidsForLoad();
+  loadOpenLoads();
+}
+
+// ===== Init =====
 document.addEventListener("DOMContentLoaded", () => {
+  wireLoadForm();
+  wireBidForm();
   loadOpenLoads();
 });
+</script>
 
 </script>
 </body>

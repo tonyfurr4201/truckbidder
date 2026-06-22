@@ -247,19 +247,20 @@ function wireLoadForm() {
     await fetch(WEBAPP_URL, {
       method: "POST",
       mode: "no-cors",
-      body: JSON.stringify({
-        action: "addLoad",
-        contactName: document.querySelector('input[placeholder="Contact Name"]').value,
-        email: document.querySelector('input[placeholder="Email"]').value,
-        phone: document.querySelector('input[placeholder="Phone"]').value,
-        pickupCity: document.querySelector('input[placeholder="Concord, NC"]').value,
-        deliveryCity: document.querySelector('input[placeholder="Atlanta, GA"]').value,
-        itemType: document.querySelector("#loadForm select").value,
-        weight: document.querySelector('input[placeholder="Example: 1,500 lbs"]').value,
-        deliveryDate: document.querySelector('#loadForm input[type="date"]').value,
-        budget: document.querySelector('input[placeholder="Example: $450"]').value,
-        details: document.querySelector('#loadForm textarea').value
-      })
+   body: JSON.stringify({
+  action: "addload",
+  loadId: "LOAD-" + String(Date.now()).slice(-3),
+  customerName: document.querySelector('input[placeholder="Contact Name"]').value,
+  customerEmail: document.querySelector('input[placeholder="Email"]').value,
+  customerPhone: document.querySelector('input[placeholder="Phone"]').value,
+  pickup: document.querySelector('input[placeholder="Concord, NC"]').value,
+  delivery: document.querySelector('input[placeholder="Atlanta, GA"]').value,
+  itemType: document.querySelector("#loadForm select").value,
+  weight: document.querySelector('input[placeholder="Example: 1,500 lbs"]').value,
+  deliveryDate: document.querySelector('#loadForm input[type="date"]').value,
+  budget: document.querySelector('input[placeholder="Example: $450"]').value,
+  details: document.querySelector('#loadForm textarea').value
+})
     });
 
     alert("Load submitted!");

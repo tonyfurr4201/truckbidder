@@ -406,9 +406,93 @@ async function acceptBid(loadId, driverName) {
 } 
 
 
-loadOpenLoads();   
-  // Load loads on page load
+// ===== Loads Open For Bids (CSV read) =====
+const LOADS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQaD-4n_6IEp76TwCs3TyojCYFK-Jzyc5yJvDDvS9ZbN7RgLtfdVMuFyMKPZ7xo5b7Q9x0J3KvVK0Zs/pub?gid=0&single=true&output=csv";
+
+function parseCSV_simple(text) {
+  const rows = [];
+  let row = [];
+  let cur = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    const next = text[i + 1];
+
+    if (c === '"' && inQuotes && next === '"') { cur += '"'; i++; continue; }
+    if (c === '"') { inQuotes = !inQuotes; continue; }
+
+    if (c === "," && !inQuotes) { row.push(cur); cur = ""; continue; }
+
+    if ((c === "\n" || c === "\r") && !inQuotes) {
+      if (c === "\r" && next === "\n") i++;
+      row.push(cur); cur = "";
+      if (row.length > 1 || row[0] !== "") rows.push(row);
+      row = [];
+      continue;
+    }
+
+    cur += c;
+  }
+
+  row.push(cur);
+  if (row.length > 1 || row[0] !== "") rows.push(row);
+
+  return rows;
+}
+
+async function loadOpenLoads() {
+  const cards = document.querySelector("#loads .cards");
+  if (!cards) return;
+
+  cards.innerHTML = "<p>Loading loads…</p>";
+
+  try {
+    const res = await fetch(LOADS_CSV_URL, { cache: "no-store" });
+    const csv = await res.text();
+    const table = parseCSV_simple(csv);
+    const rows = table.slice(1);
+
+    // Expected Loads columns (0-based):
+    // 1 Load ID, 5 Pickup, 6 Delivery, 7 Item Type, 8 Weight, 9 Delivery Date, 10 Status
+    const open = rows.filter(r => String(r[10] || "").trim().toUpperCase() === "OPEN");
+
+    if (!open.length) {
+      cards.innerHTML = "<p>No OPEN loads right now.</p>";
+      return;
+    }
+
+    cards.innerHTML = open.map(r => {
+      const loadId = (r[1] || "").trim();
+      const pickup = (r[5] || "").trim();
+      const delivery = (r[6] || "").trim();
+      const itemType = (r[7] || "").trim();
+      const weight = (r[8] || "").trim();
+      const deliveryDate = (r[9] || "").trim();
+
+      return `
+        <div class="card">
+          <h3>${loadId}</h3>
+          <p><strong>Pickup:</strong> ${pickup}</p>
+          <p><strong>Delivery:</strong> ${delivery}</p>
+          <p><strong>Item:</strong> ${itemType}</p>
+          <p><strong>Weight:</strong> ${weight}</p>
+          <p><strong>Delivery Date:</strong> ${deliveryDate}</p>
+        </div>
+      `;
+    }).join("");
+
+  } catch (err) {
+    console.error(err);
+    cards.innerHTML = "<p>Could not load loads.</p>";
+  }
+}
+
+// Call it once on page load
+document.addEventListener("DOMContentLoaded", () => {
   loadOpenLoads();
+});
+
 </script>
 </body>
 </html>   

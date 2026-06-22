@@ -157,8 +157,7 @@ Submit Bid
     <p><b>BidAndTruckit</b> — Freight bidding for equipment, attachments, materials, and heavy items.</p>
     <p>© 2026 BidAndTruckit. </p>
   </footer>
-  <script>
-
+<script>
 const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxGRtsn9wBTmjAqFIhD7iwqfzzQ2dHooe_iO0LUROJIwBPsSS1qu2l3Qs79im_RAxdg/exec";
 
 document.getElementById('loadForm').addEventListener('submit', async function(e) {
@@ -168,26 +167,24 @@ document.getElementById('loadForm').addEventListener('submit', async function(e)
     method: 'POST',
     mode: 'no-cors',
     body: JSON.stringify({
+      action: "addLoad",
       contactName: document.querySelector('input[placeholder="Contact Name"]').value,
       email: document.querySelector('input[placeholder="Email"]').value,
-phone: document.querySelector('input[placeholder="Phone"]').value, 
+      phone: document.querySelector('input[placeholder="Phone"]').value,
       pickupCity: document.querySelector('input[placeholder="Concord, NC"]').value,
       deliveryCity: document.querySelector('input[placeholder="Atlanta, GA"]').value,
       itemType: document.querySelector('select').value,
       weight: document.querySelector('input[placeholder="Example: 1,500 lbs"]').value,
       deliveryDate: document.querySelector('input[type="date"]').value,
-   budget: document.querySelector('input[placeholder="Example: $450"]').value,
+      budget: document.querySelector('input[placeholder="Example: $450"]').value,
       details: document.querySelector('textarea').value
     })
-  // --- Post Load ---
-  document.getElementById('loadForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
+  });
 
-    // NOTE: We still send budget in the payload (harmless), but we are NOT showing it on cards.
-    // If you want, we can remove budget from the form later.
-    await fetch(WEBAPP_URL, {
-      method: 'POST',
-      mode: 'no-cors',
+  alert("Load submitted!");
+});
+</script>
+
       body: JSON.stringify({
         contactName: document.querySelector('input[placeholder="Contact Name"]').value,
         email: document.querySelector('input[placeholder="Email"]').value,

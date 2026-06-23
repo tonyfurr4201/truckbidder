@@ -43,9 +43,9 @@
 
   <div class="hero">
     <h1>Post your shipment. Let truckers bid.</h1>
-    <p>BidAndTruckIt helps people move equipment, attachments, tractors, materials...
+    <p>BidAndTruckIt helps people move equipment, attachments, tractors, materials, and heavy items by letting truckers compete for the work.</p>
     <a class="btn" href="#post">Post a Load</a>
-    <a class="btn" href="#drivers">Become a Driver</a></strong>  
+    <a class="btn secondary" href="#drivers">Become a Driver</a>
   </div>
 
   <section>
@@ -60,296 +60,354 @@
 
   <section id="post">
     <h2>Post a Load</h2>
-    <form id="loadForm"> 
+    <form id="loadForm">
       <div class="form-grid">
-        <div><label>Your Name</label><input placeholder="Contact Name" required></div>
         <div>
-  <label>Email</label>
-  <input placeholder="Email" required>
-</div>
+          <label for="customerName">Your Name</label>
+          <input id="customerName" name="customerName" placeholder="Contact Name" required>
+        </div>
 
-<div>
-  <label>Phone</label>
-  <input placeholder="Phone" required>
-</div> 
-        <div><label>Pickup City</label><input placeholder="Concord, NC" required></div>
-        <div><label>Delivery City</label><input placeholder="Atlanta, GA" required></div>
-        <div><label>Item Type</label><select><option>Skid Steer Attachment</option><option>Tractor</option><option>Mini Excavator</option><option>Farm Equipment</option><option>Building Materials</option><option>Other</option></select></div>
-        <div><label>Estimated Weight</label><input placeholder="Example: 1,500 lbs"></div>
-        <div><label>Target Delivery Date</label><input type="date"></div>
-        <div><label>Budget</label><input placeholder="Example: $450"></div>
+        <div>
+          <label for="customerEmail">Email</label>
+          <input id="customerEmail" name="customerEmail" type="email" placeholder="Email" required>
+        </div>
+
+        <div>
+          <label for="customerPhone">Phone</label>
+          <input id="customerPhone" name="customerPhone" placeholder="Phone" required>
+        </div>
+
+        <div>
+          <label for="pickup">Pickup City</label>
+          <input id="pickup" name="pickup" placeholder="Concord, NC" required>
+        </div>
+
+        <div>
+          <label for="delivery">Delivery City</label>
+          <input id="delivery" name="delivery" placeholder="Atlanta, GA" required>
+        </div>
+
+        <div>
+          <label for="itemType">Item Type</label>
+          <select id="itemType" name="itemType">
+            <option>Skid Steer Attachment</option>
+            <option>Tractor</option>
+            <option>Mini Excavator</option>
+            <option>Farm Equipment</option>
+            <option>Building Materials</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="weight">Estimated Weight</label>
+          <input id="weight" name="weight" placeholder="Example: 1,500 lbs">
+        </div>
+
+        <div>
+          <label for="deliveryDate">Target Delivery Date</label>
+          <input id="deliveryDate" name="deliveryDate" type="date">
+        </div>
+
+        <div>
+          <label for="budget">Budget</label>
+          <input id="budget" name="budget" placeholder="Example: $450">
+        </div>
       </div>
+
       <br>
-      <label>Upload Photos</label>
-<input type="file" multiple>
-<br><br>
-<label>Shipment Details</label>
-      
-      <textarea placeholder="Describe the item, size, loading help, unloading help, and any special notes."></textarea>
+      <label for="photos">Upload Photos</label>
+      <input id="photos" type="file" multiple>
+
+      <br><br>
+      <label for="details">Shipment Details</label>
+      <textarea id="details" name="details" placeholder="Describe the item, size, loading help, unloading help, and any special notes."></textarea>
+
       <button class="btn" type="submit">Submit Load</button>
     </form>
   </section>
 
   <section id="loads">
     <h2>Loads Open For Bids</h2>
-  
-   <div class="cards">
-</div>
-
-</section>
-<section id="view-bids">
-  <h2>View Bids For My Load</h2>
-
-  <div class="card">
-    <label>Enter Your Load ID</label>
-    <div style="display:flex;align-items:center;">
-<span style="padding:8px;background:#eee;border:1px solid #ccc;border-right:none;">LOAD-</span>
-<input id="customerLoadId" placeholder="012" maxlength="3">
-</div>
-
-    <br><br>
-
-    <button class="btn" type="button" onclick="showBidsForLoad()">
-      View Bids
-    </button>
-
-    <div id="bidResults"></div>
-  </div>
-</section> 
-<section id="drivers"> 
-    <div class="card">
-<h3>Submit A Bid</h3>
-
-<form id="bidForm">
-
-<label>Load ID</label>
-<div style="display:flex;align-items:center;">
-<span style="padding:8px 12px;background:#f3f3f3;border:1px solid #ccc;border-right:none;">LOAD-</span>
-<input id="bidLoadNum" placeholder="001" maxlength="3">
-</div>
-
-<label>Driver Name</label>
-<input placeholder="Your Name">
-
-<label>Phone</label>
-<input placeholder="Phone Number">
-
-<label>Bid Amount</label>
-<input placeholder="$450">
-
-<label>Notes</label>
-<textarea placeholder="Equipment type, route, notes"></textarea>
-
-<br><br>
-
-<button class="btn" type="submit">
-Submit Bid
-</button>
-
-</form>
-
-</div> 
+    <div class="cards"></div>
   </section>
 
-  
+  <section id="view-bids">
+    <h2>View Bids For My Load</h2>
 
-  <footer>
-    <p><b>BidAndTruckit</b> — Freight bidding for equipment, attachments, materials, and heavy items.</p>
-    <p>© 2026 BidAndTruckit. </p>
-  </footer>
-<script>
-const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxGRtsn9wBTmjAqFIhD7iwqfzzQ2dHooe_iO0LUROJIwBPsSS1qu2l3Qs79im_RAxdg/exec";
-const LOADS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQaD-4n_6IEp76TwCs3TyojCYFK-Jzyc5yJvDDvS9ZbN7RgLtfdVMuFyMKPZ7xo5b7Q9x0J3KvVK0Zs/pub?gid=0&single=true&output=csv";
-// ===== Loads Open For Bids (CSV read) =====
-
-function parseCSV_simple(text) {
-  const rows = [];
-  let row = [];
-  let cur = "";
-  let inQuotes = false;
-
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    const next = text[i + 1];
-
-    if (c === '"' && inQuotes && next === '"') { cur += '"'; i++; continue; }
-    if (c === '"') { inQuotes = !inQuotes; continue; }
-    if (c === "," && !inQuotes) { row.push(cur); cur = ""; continue; }
-
-    if ((c === "\n" || c === "\r") && !inQuotes) {
-      if (c === "\r" && next === "\n") i++;
-      row.push(cur); cur = "";
-      if (row.length > 1 || row[0] !== "") rows.push(row);
-      row = [];
-      continue;
-    }
-    cur += c;
-  }
-
-  row.push(cur);
-  if (row.length > 1 || row[0] !== "") rows.push(row);
-  return rows;
-}
-
-async function loadOpenLoads() {
-  const cards = document.querySelector("#loads .cards");
-  if (!cards) return;
-
-  cards.innerHTML = "<p>Loading loads…</p>";
-  try {
-const res = await fetch(LOADS_CSV_URL, { cache: "no-store" });
-const csv = await res.text();
-const table = parseCSV_simple(csv);
-const rows = table.slice(1);
-const open = rows.filter(r => String(r[10] || "").trim().toUpperCase() === "OPEN");
-    if (!open.length) {
-      cards.innerHTML = "<p>No OPEN loads right now.</p>";
-      return;
-    }
-
-    cards.innerHTML = open.map(r => {
-      const loadId = (r[1] || "").trim();
-      const pickup = (r[5] || "").trim();
-      const delivery = (r[6] || "").trim();
-      const itemType = (r[7] || "").trim();
-      const weight = (r[8] || "").trim();
-      const deliveryDate = (r[9] || "").trim();
-
-      return `
-        <div class="card load-card">
-          <span class="badge">Open for bids</span>
-          <h3>${loadId} - ${itemType}</h3>
-          <p><b>Route:</b> ${pickup} to ${delivery}</p>
-          <p><b>Weight:</b> ${weight}</p>
-          <p><b>Delivery Date:</b> ${deliveryDate}</p>
-          <a class="btn" href="#drivers"
-             onclick="document.getElementById('bidLoadNum').value='${loadId.replace("LOAD-","")}'">
-             Bid on this Load
-          </a>
-        </div>
-      `;
-    }).join("");
-
-  } catch (err) {
-    console.error(err);
-    cards.innerHTML = "<p>Could not load loads.</p>";
-  }
-}
-
-// ===== Submit Load =====
-function wireLoadForm() {
-  const form = document.getElementById("loadForm");
-  if (!form) return;
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    await fetch(WEBAPP_URL, {
-      method: "POST",
-      mode: "no-cors",
-   body: JSON.stringify({
-  action: "addload",
-  loadId: "LOAD-" + String(Date.now()).slice(-3),
-  customerName: document.querySelector('input[placeholder="Contact Name"]').value,
-  customerEmail: document.querySelector('input[placeholder="Email"]').value,
-  customerPhone: document.querySelector('input[placeholder="Phone"]').value,
-  pickup: document.querySelector('input[placeholder="Concord, NC"]').value,
-  delivery: document.querySelector('input[placeholder="Atlanta, GA"]').value,
-  itemType: document.querySelector("#loadForm select").value,
-  weight: document.querySelector('input[placeholder="Example: 1,500 lbs"]').value,
-  deliveryDate: document.querySelector('#loadForm input[type="date"]').value,
-  budget: document.querySelector('input[placeholder="Example: $450"]').value,
-  details: document.querySelector('#loadForm textarea').value
-})
-    });
-
-    alert("Load submitted!");
-    loadOpenLoads();
-    form.reset();
-  });
-}
-
-// ===== Submit Bid =====
-function wireBidForm() {
-  const form = document.getElementById("bidForm");
-  if (!form) return;
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const loadNum = document.getElementById("bidLoadNum").value;
-    const loadId = "LOAD-" + String(loadNum).padStart(3, "0");
-
-    await fetch(WEBAPP_URL, {
-      method: "POST",
-      mode: "no-cors",
-      body: JSON.stringify({
-        type: "bid",
-        loadId,
-        driverName: document.querySelector('input[placeholder="Your Name"]').value,
-        phone: document.querySelector('input[placeholder="Phone Number"]').value,
-        bidAmount: document.querySelector('input[placeholder="$450"]').value,
-        notes: document.querySelector('textarea[placeholder="Equipment type, route, notes"]').value
-      })
-    });
-
-    alert("Bid submitted!");
-    form.reset();
-  });
-}
-
-// ===== View Bids =====
-async function showBidsForLoad() {
-  const loadId = "LOAD-" + document.getElementById("customerLoadId").value.padStart(3, "0");
-  const res = await fetch(WEBAPP_URL + "?loadId=" + encodeURIComponent(loadId));
-  const bids = await res.json();
-
-  let html = "<h3>Bids Received</h3>";
-
-  bids.forEach((bid) => {
-    // Bids: 0 ts, 1 loadId, 2 driver, 3 phone, 4 amount, 5 notes, 6 status
-    const decision = bid[6] || "";
-
-    let actionHtml = `<button class="btn" onclick="acceptBid('${bid[1]}','${bid[2]}')">Accept Bid</button>`;
-    if (decision === "ACCEPTED") actionHtml = "<p><b>Status:</b> ACCEPTED</p>";
-    if (decision === "REJECTED") actionHtml = "<p><b>Status:</b> REJECTED</p>";
-
-    html += `
-      <div class="card">
-        <p><b>Driver:</b> ${bid[2]}</p>
-        <p><b>Phone:</b> ${bid[3]}</p>
-        <p><b>Bid Amount:</b> ${bid[4]}</p>
-        <p><b>Notes:</b> ${bid[5]}</p>
-        ${actionHtml}
+    <div class="card">
+      <label for="customerLoadId">Enter Your Load ID</label>
+      <div style="display:flex;align-items:center;">
+        <span style="padding:8px;background:#eee;border:1px solid #ccc;border-right:none;">LOAD-</span>
+        <input id="customerLoadId" placeholder="012" maxlength="3">
       </div>
-    `;
-  });
 
-  document.getElementById("bidResults").innerHTML = html;
-}
+      <br><br>
 
-async function acceptBid(loadId, driverName) {
-  await fetch(WEBAPP_URL, {
-    method: "POST",
-    mode: "no-cors",
-    body: JSON.stringify({
-      type: "acceptBid",
-      loadId,
-      driverName
-    })
-  });
+      <button class="btn" type="button" onclick="showBidsForLoad()">
+        View Bids
+      </button>
 
-  alert("Bid accepted!");
-  showBidsForLoad();
-  loadOpenLoads();
-}
+      <div id="bidResults"></div>
+    </div>
+  </section>
 
-// ===== Init =====
-document.addEventListener("DOMContentLoaded", () => {
-  wireLoadForm();
-  wireBidForm();
-  loadOpenLoads();
-});
-</script>
+  <section id="drivers">
+    <div class="card">
+      <h3>Submit A Bid</h3>
+
+      <form id="bidForm">
+        <label for="bidLoadNum">Load ID</label>
+        <div style="display:flex;align-items:center;">
+          <span style="padding:8px 12px;background:#f3f3f3;border:1px solid #ccc;border-right:none;">LOAD-</span>
+          <input id="bidLoadNum" placeholder="001" maxlength="3" required>
+        </div>
+
+        <label for="driverName">Driver Name</label>
+        <input id="driverName" placeholder="Your Name" required>
+
+        <label for="driverPhone">Phone</label>
+        <input id="driverPhone" placeholder="Phone Number" required>
+
+        <label for="bidAmount">Bid Amount</label>
+        <input id="bidAmount" placeholder="$450" required>
+
+        <label for="bidNotes">Notes</label>
+        <textarea id="bidNotes" placeholder="Equipment type, route, notes"></textarea>
+
+        <br><br>
+
+        <button class="btn" type="submit">
+          Submit Bid
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <footer id="contact">
+    <p><b>BidAndTruckIt</b> - Freight bidding for equipment, attachments, materials, and heavy items.</p>
+    <p>Copyright 2026 BidAndTruckIt.</p>
+  </footer>
+
+  <script>
+    const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxGRtsn9wBTmjAqFIhD7iwqfzzQ2dHooe_iO0LUROJIwBPsSS1qu2l3Qs79im_RAxdg/exec";
+    const LOADS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQaD-4n_6IEp76TwCs3TyojCYFK-Jzyc5yJvDDvS9ZbN7RgLtfdVMuFyMKPZ7xo5b7Q9x0J3KvVK0Zs/pub?gid=0&single=true&output=csv";
+
+    // ===== Loads Open For Bids (CSV read) =====
+    function parseCSV_simple(text) {
+      const rows = [];
+      let row = [];
+      let cur = "";
+      let inQuotes = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        const next = text[i + 1];
+
+        if (c === '"' && inQuotes && next === '"') { cur += '"'; i++; continue; }
+        if (c === '"') { inQuotes = !inQuotes; continue; }
+        if (c === "," && !inQuotes) { row.push(cur); cur = ""; continue; }
+
+        if ((c === "\n" || c === "\r") && !inQuotes) {
+          if (c === "\r" && next === "\n") i++;
+          row.push(cur); cur = "";
+          if (row.length > 1 || row[0] !== "") rows.push(row);
+          row = [];
+          continue;
+        }
+
+        cur += c;
+      }
+
+      row.push(cur);
+      if (row.length > 1 || row[0] !== "") rows.push(row);
+      return rows;
+    }
+
+    async function loadOpenLoads() {
+      const cards = document.querySelector("#loads .cards");
+      if (!cards) return;
+
+      cards.innerHTML = "<p>Loading loads...</p>";
+
+      try {
+        const res = await fetch(LOADS_CSV_URL, { cache: "no-store" });
+        const csv = await res.text();
+        const table = parseCSV_simple(csv);
+        const rows = table.slice(1);
+        const open = rows.filter(r => String(r[10] || "").trim().toUpperCase() === "OPEN");
+
+        if (!open.length) {
+          cards.innerHTML = "<p>No OPEN loads right now.</p>";
+          return;
+        }
+
+        cards.innerHTML = open.map(r => {
+          const loadId = (r[1] || "").trim();
+          const pickup = (r[5] || "").trim();
+          const delivery = (r[6] || "").trim();
+          const itemType = (r[7] || "").trim();
+          const weight = (r[8] || "").trim();
+          const deliveryDate = (r[9] || "").trim();
+
+          return `
+            <div class="card load-card">
+              <span class="badge">Open for bids</span>
+              <h3>${loadId} - ${itemType}</h3>
+              <p><b>Route:</b> ${pickup} to ${delivery}</p>
+              <p><b>Weight:</b> ${weight}</p>
+              <p><b>Delivery Date:</b> ${deliveryDate}</p>
+              <a class="btn" href="#drivers"
+                 onclick="document.getElementById('bidLoadNum').value='${loadId.replace("LOAD-","")}'">
+                 Bid on this Load
+              </a>
+            </div>
+          `;
+        }).join("");
+
+      } catch (err) {
+        console.error(err);
+        cards.innerHTML = "<p>Could not load loads.</p>";
+      }
+    }
+
+    // ===== Submit Load =====
+    function wireLoadForm() {
+      const form = document.getElementById("loadForm");
+      if (!form) return;
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const submitButton = form.querySelector('button[type="submit"]');
+        const loadId = "LOAD-" + String(Date.now()).slice(-3);
+
+        const payload = new URLSearchParams();
+        payload.append("action", "addload");
+        payload.append("loadId", loadId);
+        payload.append("customerName", document.getElementById("customerName").value.trim());
+        payload.append("customerEmail", document.getElementById("customerEmail").value.trim());
+        payload.append("customerPhone", document.getElementById("customerPhone").value.trim());
+        payload.append("pickup", document.getElementById("pickup").value.trim());
+        payload.append("delivery", document.getElementById("delivery").value.trim());
+        payload.append("itemType", document.getElementById("itemType").value.trim());
+        payload.append("weight", document.getElementById("weight").value.trim());
+        payload.append("deliveryDate", document.getElementById("deliveryDate").value.trim());
+        payload.append("budget", document.getElementById("budget").value.trim());
+        payload.append("details", document.getElementById("details").value.trim());
+
+        try {
+          if (submitButton) submitButton.disabled = true;
+
+          await fetch(WEBAPP_URL, {
+            method: "POST",
+            mode: "no-cors",
+            body: payload
+          });
+
+          alert("Load submitted! Your Load ID is " + loadId);
+          form.reset();
+
+          setTimeout(() => {
+            loadOpenLoads();
+          }, 1500);
+
+        } catch (err) {
+          console.error("Submit load failed:", err);
+          alert("Load submit failed. Please try again.");
+        } finally {
+          if (submitButton) submitButton.disabled = false;
+        }
+      });
+    }
+
+    // ===== Submit Bid =====
+    function wireBidForm() {
+      const form = document.getElementById("bidForm");
+      if (!form) return;
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const loadNum = document.getElementById("bidLoadNum").value;
+        const loadId = "LOAD-" + String(loadNum).padStart(3, "0");
+
+        const payload = new URLSearchParams();
+        payload.append("action", "addbid");
+        payload.append("loadId", loadId);
+        payload.append("driverName", document.getElementById("driverName").value.trim());
+        payload.append("phone", document.getElementById("driverPhone").value.trim());
+        payload.append("bidAmount", document.getElementById("bidAmount").value.trim());
+        payload.append("notes", document.getElementById("bidNotes").value.trim());
+
+        await fetch(WEBAPP_URL, {
+          method: "POST",
+          mode: "no-cors",
+          body: payload
+        });
+
+        alert("Bid submitted!");
+        form.reset();
+      });
+    }
+
+    // ===== View Bids =====
+    async function showBidsForLoad() {
+      const loadId = "LOAD-" + document.getElementById("customerLoadId").value.padStart(3, "0");
+      const res = await fetch(WEBAPP_URL + "?action=bids&loadId=" + encodeURIComponent(loadId));
+      const bids = await res.json();
+
+      let html = "<h3>Bids Received</h3>";
+
+      if (!bids.length) {
+        html += "<p>No bids found for this load yet.</p>";
+      }
+
+      bids.forEach((bid) => {
+        // Bids: 0 ts, 1 loadId, 2 driver, 3 phone, 4 amount, 5 notes, 6 status
+        const decision = bid[6] || "";
+
+        let actionHtml = `<button class="btn" onclick="acceptBid('${bid[1]}','${bid[2]}')">Accept Bid</button>`;
+        if (decision === "ACCEPTED") actionHtml = "<p><b>Status:</b> ACCEPTED</p>";
+        if (decision === "REJECTED") actionHtml = "<p><b>Status:</b> REJECTED</p>";
+
+        html += `
+          <div class="card">
+            <p><b>Driver:</b> ${bid[2]}</p>
+            <p><b>Phone:</b> ${bid[3]}</p>
+            <p><b>Bid Amount:</b> ${bid[4]}</p>
+            <p><b>Notes:</b> ${bid[5]}</p>
+            ${actionHtml}
+          </div>
+        `;
+      });
+
+      document.getElementById("bidResults").innerHTML = html;
+    }
+
+    async function acceptBid(loadId, driverName) {
+      const payload = new URLSearchParams();
+      payload.append("action", "acceptbid");
+      payload.append("loadId", loadId);
+      payload.append("driverName", driverName);
+
+      await fetch(WEBAPP_URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: payload
+      });
+
+      alert("Bid accepted!");
+      showBidsForLoad();
+      loadOpenLoads();
+    }
+
+    // ===== Init =====
+    document.addEventListener("DOMContentLoaded", () => {
+      wireLoadForm();
+      wireBidForm();
+      loadOpenLoads();
+    });
+  </script>
 </body>
-</html>   
+</html>

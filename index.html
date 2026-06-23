@@ -231,8 +231,11 @@
       cards.innerHTML = "<p>Loading loads...</p>";
 
       try {
-        const res = await fetch(WEBAPP_URL + "?action=loads&cacheBust=" + Date.now(), { cache: "no-store" });
-        const open = await res.json();
+        const res = await fetch(LOADS_CSV_URL + "&cacheBust=" + Date.now(), { cache: "no-store" });
+        const csv = await res.text();
+        const table = parseCSV_simple(csv);
+        const rows = table.slice(1);
+        const open = rows.filter(r => String(r[10] || "").trim().toUpperCase() === "OPEN");
 
         if (!open.length) {
           cards.innerHTML = "<p>No OPEN loads right now.</p>";
@@ -269,12 +272,21 @@
     }
 
     async function getNextLoadId() {
-      const res = await fetch(WEBAPP_URL + "?action=nextloadid&cacheBust=" + Date.now(), { cache: "no-store" });
-      const data = await res.json();
-      if (!data || !data.ok || !data.loadId) {
-        throw new Error("Could not get next load ID");
-      }
-      return data.loadId;
+      const res = await fetch(LOADS_CSV_URL + "&cacheBust=" + Date.now(), { cache: "no-store" });
+      const csv = await res.text();
+      const table = parseCSV_simple(csv);
+      const rows = table.slice(1);
+      let maxNum = 0;
+
+      rows.forEach(row => {
+        const loadId = String(row[1] || "").trim().toUpperCase();
+        const match = loadId.match(/^LOAD-(\d+)$/);
+        if (match) {
+          maxNum = Math.max(maxNum, Number(match[1]));
+        }
+      });
+
+      return "LOAD-" + String(maxNum + 1).padStart(3, "0");
     }
 
     // ===== Submit Load =====

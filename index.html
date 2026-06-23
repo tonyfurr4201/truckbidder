@@ -231,11 +231,8 @@
       cards.innerHTML = "<p>Loading loads...</p>";
 
       try {
-        const res = await fetch(LOADS_CSV_URL, { cache: "no-store" });
-        const csv = await res.text();
-        const table = parseCSV_simple(csv);
-        const rows = table.slice(1);
-        const open = rows.filter(r => String(r[10] || "").trim().toUpperCase() === "OPEN");
+        const res = await fetch(WEBAPP_URL + "?action=loads&cacheBust=" + Date.now(), { cache: "no-store" });
+        const open = await res.json();
 
         if (!open.length) {
           cards.innerHTML = "<p>No OPEN loads right now.</p>";
@@ -271,6 +268,15 @@
       }
     }
 
+    async function getNextLoadId() {
+      const res = await fetch(WEBAPP_URL + "?action=nextloadid&cacheBust=" + Date.now(), { cache: "no-store" });
+      const data = await res.json();
+      if (!data || !data.ok || !data.loadId) {
+        throw new Error("Could not get next load ID");
+      }
+      return data.loadId;
+    }
+
     // ===== Submit Load =====
     function wireLoadForm() {
       const form = document.getElementById("loadForm");
@@ -280,11 +286,9 @@
         e.preventDefault();
 
         const submitButton = form.querySelector('button[type="submit"]');
-        const loadId = "LOAD-" + String(Date.now()).slice(-3);
 
         const payload = new URLSearchParams();
         payload.append("action", "addload");
-        payload.append("loadId", loadId);
         payload.append("customerName", document.getElementById("customerName").value.trim());
         payload.append("customerEmail", document.getElementById("customerEmail").value.trim());
         payload.append("customerPhone", document.getElementById("customerPhone").value.trim());
@@ -298,6 +302,8 @@
 
         try {
           if (submitButton) submitButton.disabled = true;
+          const loadId = await getNextLoadId();
+          payload.append("loadId", loadId);
 
           await fetch(WEBAPP_URL, {
             method: "POST",

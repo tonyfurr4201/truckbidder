@@ -142,6 +142,9 @@
         <input id="customerLoadId" placeholder="012" maxlength="3">
       </div>
 
+      <label for="customerLoadPin" style="margin-top:14px;">Private Bid Access PIN</label>
+      <input id="customerLoadPin" placeholder="6-digit PIN from your load confirmation email" maxlength="6">
+
       <br><br>
 
       <button class="btn" type="button" onclick="showBidsForLoad()">
@@ -357,7 +360,7 @@
             body: payload
           });
 
-          alert("Load submitted! Your Load ID is " + loadId);
+          alert("Load submitted! Your Load ID is " + loadId + ". Check your email for your private Bid Access PIN.");
           form.reset();
 
           setTimeout(() => {
@@ -412,8 +415,22 @@
     // ===== View Bids =====
     async function showBidsForLoad() {
       const loadId = "LOAD-" + document.getElementById("customerLoadId").value.padStart(3, "0");
-      const res = await fetch(WEBAPP_URL + "?action=bids&loadId=" + encodeURIComponent(loadId));
-      const bids = await res.json();
+      const pin = document.getElementById("customerLoadPin").value.trim();
+
+      if (!pin) {
+        document.getElementById("bidResults").innerHTML = "<p>Please enter the private Bid Access PIN from your load confirmation email.</p>";
+        return;
+      }
+
+      const res = await fetch(WEBAPP_URL + "?action=bids&loadId=" + encodeURIComponent(loadId) + "&pin=" + encodeURIComponent(pin));
+      const data = await res.json();
+
+      if (!Array.isArray(data)) {
+        document.getElementById("bidResults").innerHTML = "<p>" + (data.error || "Could not load bids.") + "</p>";
+        return;
+      }
+
+      const bids = data;
 
       let html = "<h3>Bids Received</h3>";
 
@@ -450,10 +467,18 @@
     }
 
     async function acceptBid(loadId, driverName) {
+      const pin = document.getElementById("customerLoadPin").value.trim();
+
+      if (!pin) {
+        alert("Please enter the private Bid Access PIN from your load confirmation email.");
+        return;
+      }
+
       const payload = new URLSearchParams();
       payload.append("action", "acceptbid");
       payload.append("loadId", loadId);
       payload.append("driverName", driverName);
+      payload.append("pin", pin);
 
       await fetch(WEBAPP_URL, {
         method: "POST",
@@ -461,7 +486,7 @@
         body: payload
       });
 
-      alert("Bid accepted!");
+      alert("Bid accept request sent.");
       showBidsForLoad();
       loadOpenLoads();
     }

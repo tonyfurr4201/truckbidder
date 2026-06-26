@@ -179,10 +179,10 @@
         <input id="driverCompany" placeholder="Company Name" required>
 
         <label for="dotNumber">DOT Number</label>
-        <input id="dotNumber" placeholder="DOT Number" required>
+        <input id="dotNumber" inputmode="numeric" pattern="[0-9]{1,10}" maxlength="10" placeholder="Example: 1234567" required oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)">
 
         <label for="mcNumber">MC Number (if available)</label>
-        <input id="mcNumber" placeholder="MC Number">
+        <input id="mcNumber" maxlength="15" placeholder="Example: MC-123456">
 
         <label for="vehicleType">Vehicle / Trailer Type</label>
         <select id="vehicleType" required>

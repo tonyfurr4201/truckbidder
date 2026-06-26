@@ -36,7 +36,7 @@
     <nav>
       <a href="#post">Post Load</a>
       <a href="#loads">Find Loads</a>
-      <a href="#drivers">Drivers</a>
+      <a href="#loads">Drivers</a>
       <a href="#contact">Contact</a>
     </nav>
   </header>
@@ -45,7 +45,7 @@
     <h1>Post your shipment. Let truckers bid.</h1>
     <p>BidAndTruckIt helps people move equipment, attachments, tractors, materials, and heavy items by letting truckers compete for the work.</p>
     <a class="btn" href="#post">Post a Load</a>
-    <a class="btn secondary" href="#drivers">Become a Driver</a>
+    <a class="btn secondary" href="#loads">Find Loads to Bid</a>
   </div>
 
   <section>
@@ -155,7 +155,7 @@
     </div>
   </section>
 
-  <section id="drivers">
+  <section id="drivers" style="display:none;">
     <div class="card">
       <h3>Submit A Bid</h3>
 
@@ -219,6 +219,45 @@
         </button>
       </form>
     </div>
+  </section>
+
+  <section id="updates">
+    <h2>Get BidAndTruckIt Updates</h2>
+    <form id="leadForm">
+      <div class="form-grid">
+        <div>
+          <label for="leadName">Name</label>
+          <input id="leadName" placeholder="Your Name">
+        </div>
+
+        <div>
+          <label for="leadEmail">Email</label>
+          <input id="leadEmail" type="email" placeholder="Email Address" required>
+        </div>
+
+        <div>
+          <label for="leadRole">I am a</label>
+          <select id="leadRole" required>
+            <option value="">Choose one</option>
+            <option>Shipper / Customer</option>
+            <option>Driver / Carrier</option>
+            <option>Both</option>
+          </select>
+        </div>
+      </div>
+
+      <label style="display:flex;align-items:flex-start;gap:8px;font-weight:700;margin-top:16px;">
+        <input id="leadConsent" type="checkbox" required style="width:auto;margin-top:3px;">
+        <span>I agree to receive BidAndTruckIt updates, load alerts, and service emails.</span>
+      </label>
+
+      <p style="font-size:14px;line-height:1.5;color:#444;">
+        Join our list for new load alerts, launch updates, and shipping tips.
+      </p>
+
+      <button class="btn" type="submit">Join List</button>
+      <div id="leadMessage" style="margin-top:14px;font-weight:700;"></div>
+    </form>
   </section>
 
   <footer id="contact">
@@ -294,10 +333,10 @@
               <p><b>Route:</b> ${pickup} to ${delivery}</p>
               <p><b>Weight:</b> ${weight}</p>
               <p><b>Delivery Date:</b> ${deliveryDate}</p>
-              <a class="btn" href="#drivers"
-                 onclick="document.getElementById('bidLoadNum').value='${loadId.replace("LOAD-","")}'">
+              <button class="btn" type="button"
+                 onclick="openBidForm('${loadId.replace("LOAD-","")}')">
                  Bid on this Load
-              </a>
+              </button>
             </div>
           `;
         }).join("");
@@ -324,6 +363,15 @@
       });
 
       return "LOAD-" + String(maxNum + 1).padStart(3, "0");
+    }
+
+    function openBidForm(loadNum) {
+      const section = document.getElementById("drivers");
+      const input = document.getElementById("bidLoadNum");
+
+      if (section) section.style.display = "block";
+      if (input) input.value = String(loadNum || "").padStart(3, "0");
+      if (section) section.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
     // ===== Submit Load =====
@@ -412,6 +460,45 @@
       });
     }
 
+    // ===== Lead Capture =====
+    function wireLeadForm() {
+      const form = document.getElementById("leadForm");
+      if (!form) return;
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const submitButton = form.querySelector('button[type="submit"]');
+        const message = document.getElementById("leadMessage");
+
+        const payload = new URLSearchParams();
+        payload.append("action", "addlead");
+        payload.append("name", document.getElementById("leadName").value.trim());
+        payload.append("email", document.getElementById("leadEmail").value.trim());
+        payload.append("role", document.getElementById("leadRole").value);
+        payload.append("consent", document.getElementById("leadConsent").checked ? "YES" : "");
+        payload.append("source", "Website updates form");
+
+        try {
+          if (submitButton) submitButton.disabled = true;
+
+          await fetch(WEBAPP_URL, {
+            method: "POST",
+            mode: "no-cors",
+            body: payload
+          });
+
+          if (message) message.textContent = "Thanks. You are on the BidAndTruckIt update list.";
+          form.reset();
+        } catch (err) {
+          console.error("Lead submit failed:", err);
+          if (message) message.textContent = "Could not join the list. Please try again.";
+        } finally {
+          if (submitButton) submitButton.disabled = false;
+        }
+      });
+    }
+
     // ===== View Bids =====
     async function showBidsForLoad() {
       const loadId = "LOAD-" + document.getElementById("customerLoadId").value.padStart(3, "0");
@@ -495,6 +582,7 @@
     document.addEventListener("DOMContentLoaded", () => {
       wireLoadForm();
       wireBidForm();
+      wireLeadForm();
       loadOpenLoads();
     });
   </script>

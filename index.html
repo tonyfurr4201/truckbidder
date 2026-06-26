@@ -172,11 +172,38 @@
         <label for="driverEmail">Email</label>
         <input id="driverEmail" type="email" placeholder="Driver Email" required>
 
+        <label for="driverCompany">Company Name</label>
+        <input id="driverCompany" placeholder="Company Name" required>
+
+        <label for="dotNumber">DOT Number</label>
+        <input id="dotNumber" placeholder="DOT Number" required>
+
+        <label for="mcNumber">MC Number (if available)</label>
+        <input id="mcNumber" placeholder="MC Number">
+
+        <label for="vehicleType">Vehicle / Trailer Type</label>
+        <select id="vehicleType" required>
+          <option value="">Select vehicle or trailer type</option>
+          <option>Pickup Truck</option>
+          <option>Pickup Truck + Trailer</option>
+          <option>Hotshot</option>
+          <option>Flatbed</option>
+          <option>Enclosed Trailer</option>
+          <option>Box Truck</option>
+          <option>Step Deck</option>
+          <option>Other</option>
+        </select>
+
         <label for="bidAmount">Bid Amount</label>
         <input id="bidAmount" placeholder="$450" required>
 
         <label for="bidNotes">Notes</label>
         <textarea id="bidNotes" placeholder="Equipment type, route, notes"></textarea>
+
+        <label style="display:flex;align-items:flex-start;gap:8px;font-weight:700;margin-top:12px;">
+          <input id="legalConfirm" type="checkbox" required style="width:auto;margin-top:3px;">
+          <span>I confirm I am legally authorized and insured to haul this load.</span>
+        </label>
 
         <p style="font-size:14px;line-height:1.5;color:#444;margin-top:12px;">
           Drivers selected for a load may be asked to provide proof of insurance and carrier details before booking is finalized. BidAndTruckIt aims to review verification within 8 business hours.
@@ -363,6 +390,11 @@
         payload.append("driverName", document.getElementById("driverName").value.trim());
         payload.append("phone", document.getElementById("driverPhone").value.trim());
         payload.append("driverEmail", document.getElementById("driverEmail").value.trim());
+        payload.append("companyName", document.getElementById("driverCompany").value.trim());
+        payload.append("dotNumber", document.getElementById("dotNumber").value.trim());
+        payload.append("mcNumber", document.getElementById("mcNumber").value.trim());
+        payload.append("vehicleType", document.getElementById("vehicleType").value);
+        payload.append("legalConfirm", document.getElementById("legalConfirm").checked ? "YES" : "");
         payload.append("bidAmount", document.getElementById("bidAmount").value.trim());
         payload.append("notes", document.getElementById("bidNotes").value.trim());
 
@@ -390,7 +422,7 @@
       }
 
       bids.forEach((bid) => {
-        // Bids: 0 ts, 1 loadId, 2 driver, 3 phone, 4 amount, 5 notes, 6 status
+        // Bids: 0 ts, 1 loadId, 2 driver, 3 phone, 4 amount, 5 notes, 6 status, 7 email
         const decision = bid[6] || "";
 
         let actionHtml = `<button class="btn" onclick="acceptBid('${bid[1]}','${bid[2]}')">Accept Bid</button>`;
@@ -402,6 +434,11 @@
             <p><b>Driver:</b> ${bid[2]}</p>
             <p><b>Phone:</b> ${bid[3]}</p>
             <p><b>Email:</b> ${bid[7] || ""}</p>
+            <p><b>Company:</b> ${bid[8] || ""}</p>
+            <p><b>DOT Number:</b> ${bid[9] || ""}</p>
+            <p><b>MC Number:</b> ${bid[10] || "Not provided"}</p>
+            <p><b>Vehicle / Trailer:</b> ${bid[11] || ""}</p>
+            <p><b>Legal / Insured Confirmed:</b> ${bid[12] || ""}</p>
             <p><b>Bid Amount:</b> ${bid[4]}</p>
             <p><b>Notes:</b> ${bid[5]}</p>
             ${actionHtml}

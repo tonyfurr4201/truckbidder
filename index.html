@@ -182,7 +182,7 @@
         <input id="dotNumber" inputmode="numeric" pattern="[0-9]{1,10}" maxlength="10" placeholder="Example: 1234567" required oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)">
 
         <label for="mcNumber">MC Number (if available)</label>
-        <input id="mcNumber" maxlength="15" placeholder="Example: MC-123456">
+        <input id="mcNumber" inputmode="numeric" pattern="[0-9]{0,15}" maxlength="15" placeholder="Example: 123456" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,15)">
 
         <label for="vehicleType">Vehicle / Trailer Type</label>
         <select id="vehicleType" required>

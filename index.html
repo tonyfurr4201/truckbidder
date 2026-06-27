@@ -1,590 +1,865 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BidAndTruckIt | Let Truckers Bid on Your Shipment</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; font-family: Arial, sans-serif; color: #17212b; background: #f5f7fa; }
-    header { background: #111827; color: white; padding: 18px 7%; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
-    .logo { font-size: 28px; font-weight: 800; color: #ff7a00; }
-    nav a { color: white; text-decoration: none; margin-left: 18px; font-weight: 600; }
-    .hero { padding: 75px 7%; background: linear-gradient(rgba(17,24,39,.82),rgba(17,24,39,.82)), url('https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=1600&q=80'); background-size: cover; background-position: center; color: white; }
-    .hero h1 { font-size: clamp(36px, 7vw, 68px); max-width: 850px; margin: 0 0 16px; }
-    .hero p { font-size: 22px; max-width: 720px; line-height: 1.45; }
-    .btn { display: inline-block; background: #ff7a00; color: white; padding: 16px 28px; border-radius: 8px; text-decoration: none; font-weight: 800; margin: 10px 10px 0 0; border: none; cursor: pointer; }
-    .btn.secondary { background: white; color: #111827; }
-    section { padding: 55px 7%; }
-    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 22px; }
-    .card, form { background: white; border-radius: 14px; padding: 26px; box-shadow: 0 8px 24px rgba(0,0,0,.08); }
-    .card h3 { margin-top: 0; color: #111827; }
-    h2 { font-size: 36px; margin-top: 0; }
-    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
-    label { font-weight: 700; display: block; margin-bottom: 6px; }
-    input, textarea, select { width: 100%; padding: 13px; border: 1px solid #ccd3dd; border-radius: 8px; font-size: 16px; }
-    textarea { min-height: 110px; resize: vertical; }
-    .load-card { border-left: 6px solid #ff7a00; }
-    .badge { display:inline-block; background:#e8f1ff; color:#0f4c81; padding:6px 10px; border-radius:99px; font-size:14px; font-weight:700; }
-    footer { background: #111827; color: white; padding: 35px 7%; text-align: center; }
-    @media (max-width: 700px) { nav { margin-top: 12px; } nav a { display: inline-block; margin: 8px 12px 0 0; } }
-  </style>
-</head>
-<body>
-  <header>
-    <div class="logo">BidAndTruckIt</div>
-    <nav>
-      <a href="#post">Post Load</a>
-      <a href="#loads">Find Loads</a>
-      <a href="#loads">Drivers</a>
-      <a href="#contact">Contact</a>
-    </nav>
-  </header>
+/***************
+ * BidAndTruckIt - Apps Script Web App API
+ * Sheets: "Loads" tab and "Bids" tab
+ ***************/
 
-  <div class="hero">
-    <h1>Post your shipment. Let truckers bid.</h1>
-    <p>BidAndTruckIt helps people move equipment, attachments, tractors, materials, and heavy items by letting truckers compete for the work.</p>
-    <a class="btn" href="#post">Post a Load</a>
-    <a class="btn secondary" href="#loads">Find Loads to Bid</a>
-  </div>
+const LOADS_SHEET_NAME = "Loads";
+const BIDS_SHEET_NAME  = "Bids";
+const LOAD_PINS_SHEET_NAME = "LoadPins";
+const LEADS_SHEET_NAME = "Leads";
+const PAYMENTS_SHEET_NAME = "Payments";
+const SPREADSHEET_ID   = "13FRukLJdGFGckOTW11oDjnBUaUMUEzwBxlq7hrST_gc";
+const SITE_URL = "https://bidandtruckit.com/";
+const BOOKING_FEE_PERCENT = 0.10;
+const MIN_BOOKING_FEE_CENTS = 100;
 
-  <section>
-    <h2>How It Works</h2>
-    <div class="cards">
-      <div class="card"><h3>1. Post Your Item</h3><p>Add photos, pickup location, delivery location, weight, size, and when it needs moved.</p></div>
-      <div class="card"><h3>2. Truckers Bid</h3><p>Drivers and hotshot haulers send bids with price, pickup time, and delivery time.</p></div>
-      <div class="card"><h3>3. Pick Your Hauler</h3><p>Choose the driver you like based on price, ratings, insurance, and profile.</p></div>
-      <div class="card"><h3>4. Get It Delivered</h3><p>Track the shipment, message the driver, and leave a review after delivery.</p></div>
-    </div>
-  </section>
+// ---- Helpers ----
+function jsonOutput(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
 
-  <section id="post">
-    <h2>Post a Load</h2>
-    <form id="loadForm">
-      <div class="form-grid">
-        <div>
-          <label for="customerName">Your Name</label>
-          <input id="customerName" name="customerName" placeholder="Contact Name" required>
-        </div>
+function normalizeLoadId(v) {
+  return String(v || "").trim().toUpperCase();
+}
 
-        <div>
-          <label for="customerEmail">Email</label>
-          <input id="customerEmail" name="customerEmail" type="email" placeholder="Email" required>
-        </div>
+function normalizeStatus(v) {
+  const s = String(v || "").trim().toUpperCase();
+  if (!s) return "";
+  return s;
+}
 
-        <div>
-          <label for="customerPhone">Phone</label>
-          <input id="customerPhone" name="customerPhone" placeholder="Phone" required>
-        </div>
+function getSheet_(name) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sh = ss.getSheetByName(name);
+  if (!sh) throw new Error('Missing sheet tab: "' + name + '"');
+  return sh;
+}
 
-        <div>
-          <label for="pickup">Pickup City</label>
-          <input id="pickup" name="pickup" placeholder="Concord, NC" required>
-        </div>
+function getOrCreateSheet_(name) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  let sh = ss.getSheetByName(name);
+  if (!sh) sh = ss.insertSheet(name);
+  return sh;
+}
 
-        <div>
-          <label for="delivery">Delivery City</label>
-          <input id="delivery" name="delivery" placeholder="Atlanta, GA" required>
-        </div>
+function getAllValues_(sh) {
+  const lastRow = sh.getLastRow();
+  const lastCol = sh.getLastColumn();
+  if (lastRow < 1 || lastCol < 1) return [];
+  return sh.getRange(1, 1, lastRow, lastCol).getValues();
+}
 
-        <div>
-          <label for="itemType">Item Type</label>
-          <select id="itemType" name="itemType">
-            <option>Skid Steer Attachment</option>
-            <option>Tractor</option>
-            <option>Mini Excavator</option>
-            <option>Farm Equipment</option>
-            <option>Building Materials</option>
-            <option>Other</option>
-          </select>
-        </div>
+function getPostData_(e) {
+  const params = (e && e.parameter) ? e.parameter : {};
+  const body = e && e.postData && e.postData.contents ? e.postData.contents : "";
 
-        <div>
-          <label for="weight">Estimated Weight</label>
-          <input id="weight" name="weight" placeholder="Example: 1,500 lbs">
-        </div>
+  if (!body) return params;
 
-        <div>
-          <label for="deliveryDate">Target Delivery Date</label>
-          <input id="deliveryDate" name="deliveryDate" type="date">
-        </div>
+  try {
+    const parsed = JSON.parse(body);
+    return Object.assign({}, params, parsed);
+  } catch (err) {
+    return params;
+  }
+}
 
-        <div>
-          <label for="budget">Budget</label>
-          <input id="budget" name="budget" placeholder="Example: $450">
-        </div>
-      </div>
+function makeNextLoadId_() {
+  const sh = getSheet_(LOADS_SHEET_NAME);
+  const values = getAllValues_(sh);
+  let maxNum = 0;
 
-      <br>
-      <label for="photos">Upload Photos</label>
-      <input id="photos" type="file" multiple>
+  for (let i = 1; i < values.length; i++) {
+    const loadId = normalizeLoadId(values[i][1]);
+    const match = loadId.match(/^LOAD-(\d+)$/);
+    if (match) {
+      maxNum = Math.max(maxNum, Number(match[1]));
+    }
+  }
 
-      <br><br>
-      <label for="details">Shipment Details</label>
-      <textarea id="details" name="details" placeholder="Describe the item, size, loading help, unloading help, and any special notes."></textarea>
+  return "LOAD-" + String(maxNum + 1).padStart(3, "0");
+}
 
-      <button class="btn" type="submit">Submit Load</button>
-    </form>
-  </section>
+function makeAccessPin_() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
 
-  <section id="loads">
-    <h2>Loads Open For Bids</h2>
-    <div class="cards"></div>
-  </section>
+function findLoadById_(loadId) {
+  const sh = getSheet_(LOADS_SHEET_NAME);
+  const values = getAllValues_(sh);
 
-  <section id="view-bids">
-    <h2>View Bids For My Load</h2>
+  for (let i = 1; i < values.length; i++) {
+    if (normalizeLoadId(values[i][1]) === loadId) {
+      return {
+        sheet: sh,
+        rowNumber: i + 1,
+        row: values[i]
+      };
+    }
+  }
 
-    <div class="card">
-      <label for="customerLoadId">Enter Your Load ID</label>
-      <div style="display:flex;align-items:center;">
-        <span style="padding:8px;background:#eee;border:1px solid #ccc;border-right:none;">LOAD-</span>
-        <input id="customerLoadId" placeholder="012" maxlength="3">
-      </div>
+  return null;
+}
 
-      <label for="customerLoadPin" style="margin-top:14px;">Private Bid Access PIN</label>
-      <input id="customerLoadPin" placeholder="6-digit PIN from your load confirmation email" maxlength="6">
+function ensureLoadPinsHeaders_() {
+  const sh = getOrCreateSheet_(LOAD_PINS_SHEET_NAME);
+  sh.getRange(1, 1, 1, 4).setValues([[
+    "Timestamp",
+    "Load ID",
+    "Customer Email",
+    "Access PIN"
+  ]]);
+  return sh;
+}
 
-      <br><br>
+function saveLoadPin_(loadId, customerEmail, accessPin) {
+  const sh = ensureLoadPinsHeaders_();
+  sh.appendRow([
+    new Date(),
+    loadId,
+    customerEmail,
+    accessPin
+  ]);
+}
 
-      <button class="btn" type="button" onclick="showBidsForLoad()">
-        View Bids
-      </button>
+function findLoadPin_(loadId) {
+  const sh = ensureLoadPinsHeaders_();
+  const values = getAllValues_(sh);
 
-      <div id="bidResults"></div>
-    </div>
-  </section>
+  for (let i = values.length - 1; i >= 1; i--) {
+    if (normalizeLoadId(values[i][1]) === loadId) {
+      return String(values[i][3] || "").trim();
+    }
+  }
 
-  <section id="drivers" style="display:none;">
-    <div class="card">
-      <h3>Submit A Bid</h3>
+  return "";
+}
 
-      <form id="bidForm">
-        <label for="bidLoadNum">Load ID</label>
-        <div style="display:flex;align-items:center;">
-          <span style="padding:8px 12px;background:#f3f3f3;border:1px solid #ccc;border-right:none;">LOAD-</span>
-          <input id="bidLoadNum" placeholder="001" maxlength="3" required>
-        </div>
+function verifyLoadPin_(loadId, accessPin) {
+  const expectedPin = findLoadPin_(loadId);
+  const submittedPin = String(accessPin || "").trim();
 
-        <label for="driverName">Driver Name</label>
-        <input id="driverName" placeholder="Your Name" required>
+  if (!expectedPin) return { ok: false, error: "This load does not have a private access PIN. Please contact BidAndTruckIt." };
+  if (!submittedPin) return { ok: false, error: "Missing private access PIN" };
+  if (submittedPin !== expectedPin) return { ok: false, error: "Invalid private access PIN" };
 
-        <label for="driverPhone">Phone</label>
-        <input id="driverPhone" placeholder="Phone Number" required>
+  return { ok: true };
+}
 
-        <label for="driverEmail">Email</label>
-        <input id="driverEmail" type="email" placeholder="Driver Email" required>
+function ensureLeadsHeaders_() {
+  const sh = getOrCreateSheet_(LEADS_SHEET_NAME);
+  sh.getRange(1, 1, 1, 6).setValues([[
+    "Timestamp",
+    "Name",
+    "Email",
+    "Role",
+    "Consent",
+    "Source"
+  ]]);
+  return sh;
+}
 
-        <label for="driverCompany">Company Name</label>
-        <input id="driverCompany" placeholder="Company Name" required>
+function sendEmailSafe_(message) {
+  try {
+    if (!message.to) return { sent: false, error: "Missing email address" };
+    MailApp.sendEmail(Object.assign({
+      name: "BidAndTruckIt",
+      replyTo: "tonyfurr4201@gmail.com"
+    }, message));
+    return { sent: true };
+  } catch (err) {
+    return { sent: false, error: String(err && err.message ? err.message : err) };
+  }
+}
 
-        <label for="dotNumber">DOT Number</label>
-        <input id="dotNumber" inputmode="numeric" pattern="[0-9]{1,10}" maxlength="10" placeholder="Example: 1234567" required oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)">
+function getStripeSecretKey_() {
+  return String(PropertiesService.getScriptProperties().getProperty("STRIPE_SECRET_KEY") || "").trim();
+}
 
-        <label for="mcNumber">MC Number (if available)</label>
-        <input id="mcNumber" inputmode="numeric" pattern="[0-9]{0,15}" maxlength="15" placeholder="Example: 123456" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,15)">
+function ensurePaymentsHeaders_() {
+  const sh = getOrCreateSheet_(PAYMENTS_SHEET_NAME);
+  sh.getRange(1, 1, 1, 10).setValues([[
+    "Timestamp",
+    "Load ID",
+    "Driver Name",
+    "Driver Phone",
+    "Bid Amount",
+    "Booking Fee Cents",
+    "Stripe Session ID",
+    "Payment Status",
+    "Accepted At",
+    "Notes"
+  ]]);
+  return sh;
+}
 
-        <label for="vehicleType">Vehicle / Trailer Type</label>
-        <select id="vehicleType" required>
-          <option value="">Select vehicle or trailer type</option>
-          <option>Pickup Truck</option>
-          <option>Pickup Truck + Trailer</option>
-          <option>Hotshot</option>
-          <option>Flatbed</option>
-          <option>Enclosed Trailer</option>
-          <option>Box Truck</option>
-          <option>Step Deck</option>
-          <option>Other</option>
-        </select>
+function parseMoneyToCents_(value) {
+  const cleaned = String(value || "").replace(/[^0-9.]/g, "");
+  const amount = Number(cleaned || 0);
+  if (!isFinite(amount) || amount <= 0) return 0;
+  return Math.round(amount * 100);
+}
 
-        <label for="bidAmount">Bid Amount</label>
-        <input id="bidAmount" placeholder="$450" required>
+function formatCents_(cents) {
+  return "$" + (Number(cents || 0) / 100).toFixed(2);
+}
 
-        <label for="bidNotes">Notes</label>
-        <textarea id="bidNotes" placeholder="Equipment type, route, notes"></textarea>
+function findBidForCheckout_(loadId, driverName, driverPhone) {
+  const sh = ensureBidsHeaders_();
+  const values = getAllValues_(sh);
 
-        <label style="display:flex;align-items:flex-start;gap:8px;font-weight:700;margin-top:12px;">
-          <input id="legalConfirm" type="checkbox" required style="width:auto;margin-top:3px;">
-          <span>I confirm I am legally authorized and insured to haul this load.</span>
-        </label>
+  for (let i = 1; i < values.length; i++) {
+    const r = values[i];
+    if (normalizeLoadId(r[1]) !== loadId) continue;
 
-        <p style="font-size:14px;line-height:1.5;color:#444;margin-top:12px;">
-          Drivers selected for a load may be asked to provide proof of insurance and carrier details before booking is finalized. BidAndTruckIt aims to review verification within 8 business hours.
-        </p>
+    const rDriverName = String(r[2] || "").trim();
+    const rDriverPhone = String(r[3] || "").trim();
+    const rStatus = normalizeStatus(r[6]);
+    const phoneMatches = driverPhone && rDriverPhone === driverPhone;
+    const nameMatches = !driverPhone && driverName && rDriverName === driverName;
 
-        <br><br>
+    if ((phoneMatches || nameMatches) && rStatus === "PENDING") {
+      return {
+        rowNumber: i + 1,
+        row: r,
+        driverName: rDriverName,
+        driverPhone: rDriverPhone,
+        bidAmount: String(r[4] || "").trim()
+      };
+    }
+  }
 
-        <button class="btn" type="submit">
-          Submit Bid
-        </button>
-      </form>
-    </div>
-  </section>
+  return null;
+}
 
-  <section id="updates">
-    <h2>Get BidAndTruckIt Updates</h2>
-    <form id="leadForm">
-      <div class="form-grid">
-        <div>
-          <label for="leadName">Name</label>
-          <input id="leadName" placeholder="Your Name">
-        </div>
+function authorizeEmail() {
+  const email = Session.getActiveUser().getEmail();
+  MailApp.sendEmail(
+    {
+      to: email,
+      name: "BidAndTruckIt",
+      replyTo: "tonyfurr4201@gmail.com",
+      subject: "BidAndTruckIt email authorization test",
+      body: "If you received this, BidAndTruckIt email permission is authorized."
+    }
+  );
+}
 
-        <div>
-          <label for="leadEmail">Email</label>
-          <input id="leadEmail" type="email" placeholder="Email Address" required>
-        </div>
+// ---- GET ----
+// Supported:
+// 1) /exec?action=loads
+// 2) /exec?action=bids&loadId=LOAD-001&pin=123456
+function doGet(e) {
+  try {
+    const params = (e && e.parameter) ? e.parameter : {};
+    const action = String(params.action || "loads").toLowerCase();
 
-        <div>
-          <label for="leadRole">I am a</label>
-          <select id="leadRole" required>
-            <option value="">Choose one</option>
-            <option>Shipper / Customer</option>
-            <option>Driver / Carrier</option>
-            <option>Both</option>
-          </select>
-        </div>
-      </div>
-
-      <label style="display:flex;align-items:flex-start;gap:8px;font-weight:700;margin-top:16px;">
-        <input id="leadConsent" type="checkbox" required style="width:auto;margin-top:3px;">
-        <span>I agree to receive BidAndTruckIt updates, load alerts, and service emails.</span>
-      </label>
-
-      <p style="font-size:14px;line-height:1.5;color:#444;">
-        Join our list for new load alerts, launch updates, and shipping tips.
-      </p>
-
-      <button class="btn" type="submit">Join List</button>
-      <div id="leadMessage" style="margin-top:14px;font-weight:700;"></div>
-    </form>
-  </section>
-
-  <footer id="contact">
-    <p><b>BidAndTruckIt</b> - Freight bidding for equipment, attachments, materials, and heavy items.</p>
-    <p>Copyright 2026 BidAndTruckIt.</p>
-  </footer>
-
-  <script>
-    const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwl_Y-KHgmgRuzN_-ZC5emJ8gwPOzmTJSTLiXu4dgG-WrdH6xVMs8F-h8bYXWN5UiUp/exec";
-    const LOADS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQaD-4n_6IEp76TwCs3TyojCYFK-Jzyc5yJvDDvS9ZbN7RgLtfdVMuFyMKPZ7xo5b7Q9x0J3KvVK0Zs/pub?gid=0&single=true&output=csv";
-
-    // ===== Loads Open For Bids (CSV read) =====
-    function parseCSV_simple(text) {
-      const rows = [];
-      let row = [];
-      let cur = "";
-      let inQuotes = false;
-
-      for (let i = 0; i < text.length; i++) {
-        const c = text[i];
-        const next = text[i + 1];
-
-        if (c === '"' && inQuotes && next === '"') { cur += '"'; i++; continue; }
-        if (c === '"') { inQuotes = !inQuotes; continue; }
-        if (c === "," && !inQuotes) { row.push(cur); cur = ""; continue; }
-
-        if ((c === "\n" || c === "\r") && !inQuotes) {
-          if (c === "\r" && next === "\n") i++;
-          row.push(cur); cur = "";
-          if (row.length > 1 || row[0] !== "") rows.push(row);
-          row = [];
-          continue;
-        }
-
-        cur += c;
-      }
-
-      row.push(cur);
-      if (row.length > 1 || row[0] !== "") rows.push(row);
-      return rows;
+    if (action === "loads") {
+      return jsonOutput(getOpenLoads_());
     }
 
-    async function loadOpenLoads() {
-      const cards = document.querySelector("#loads .cards");
-      if (!cards) return;
-
-      cards.innerHTML = "<p>Loading loads...</p>";
-
-      try {
-        const res = await fetch(LOADS_CSV_URL + "&cacheBust=" + Date.now(), { cache: "no-store" });
-        const csv = await res.text();
-        const table = parseCSV_simple(csv);
-        const rows = table.slice(1);
-        const open = rows.filter(r => String(r[10] || "").trim().toUpperCase() === "OPEN");
-
-        if (!open.length) {
-          cards.innerHTML = "<p>No OPEN loads right now.</p>";
-          return;
-        }
-
-        cards.innerHTML = open.map(r => {
-          const loadId = (r[1] || "").trim();
-          const pickup = (r[5] || "").trim();
-          const delivery = (r[6] || "").trim();
-          const itemType = (r[7] || "").trim();
-          const weight = (r[8] || "").trim();
-          const deliveryDate = (r[9] || "").trim();
-
-          return `
-            <div class="card load-card">
-              <span class="badge">Open for bids</span>
-              <h3>${loadId} - ${itemType}</h3>
-              <p><b>Route:</b> ${pickup} to ${delivery}</p>
-              <p><b>Weight:</b> ${weight}</p>
-              <p><b>Delivery Date:</b> ${deliveryDate}</p>
-              <button class="btn" type="button"
-                 onclick="openBidForm('${loadId.replace("LOAD-","")}')">
-                 Bid on this Load
-              </button>
-            </div>
-          `;
-        }).join("");
-
-      } catch (err) {
-        console.error(err);
-        cards.innerHTML = "<p>Could not load loads.</p>";
-      }
+    if (action === "bids") {
+      const loadId = normalizeLoadId(params.loadId);
+      if (!loadId) return jsonOutput({ ok: false, error: "Missing loadId" });
+      return jsonOutput(getBidsForLoad_(loadId, params.pin || params.accessPin || ""));
     }
 
-    async function getNextLoadId() {
-      const res = await fetch(LOADS_CSV_URL + "&cacheBust=" + Date.now(), { cache: "no-store" });
-      const csv = await res.text();
-      const table = parseCSV_simple(csv);
-      const rows = table.slice(1);
-      let maxNum = 0;
+    if (action === "nextloadid") {
+      return jsonOutput({ ok: true, loadId: makeNextLoadId_() });
+    }
 
-      rows.forEach(row => {
-        const loadId = String(row[1] || "").trim().toUpperCase();
-        const match = loadId.match(/^LOAD-(\d+)$/);
-        if (match) {
-          maxNum = Math.max(maxNum, Number(match[1]));
-        }
+    if (action === "testemail") {
+      const to = String(params.to || "").trim();
+      const result = sendEmailSafe_({
+        to: to,
+        subject: "BidAndTruckIt email test",
+        body: "This is a test email from the BidAndTruckIt Apps Script.",
+        htmlBody: "<p>This is a test email from the <b>BidAndTruckIt</b> Apps Script.</p>"
       });
-
-      return "LOAD-" + String(maxNum + 1).padStart(3, "0");
+      return jsonOutput({ ok: result.sent, email: result });
     }
 
-    function openBidForm(loadNum) {
-      const section = document.getElementById("drivers");
-      const input = document.getElementById("bidLoadNum");
-
-      if (section) section.style.display = "block";
-      if (input) input.value = String(loadNum || "").padStart(3, "0");
-      if (section) section.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (action === "createcheckout") {
+      return jsonOutput(createCheckout_(params));
     }
 
-    // ===== Submit Load =====
-    function wireLoadForm() {
-      const form = document.getElementById("loadForm");
-      if (!form) return;
-
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const submitButton = form.querySelector('button[type="submit"]');
-
-        const payload = new URLSearchParams();
-        payload.append("action", "addload");
-        payload.append("customerName", document.getElementById("customerName").value.trim());
-        payload.append("customerEmail", document.getElementById("customerEmail").value.trim());
-        payload.append("customerPhone", document.getElementById("customerPhone").value.trim());
-        payload.append("pickup", document.getElementById("pickup").value.trim());
-        payload.append("delivery", document.getElementById("delivery").value.trim());
-        payload.append("itemType", document.getElementById("itemType").value.trim());
-        payload.append("weight", document.getElementById("weight").value.trim());
-        payload.append("deliveryDate", document.getElementById("deliveryDate").value.trim());
-        payload.append("budget", document.getElementById("budget").value.trim());
-        payload.append("details", document.getElementById("details").value.trim());
-
-        try {
-          if (submitButton) submitButton.disabled = true;
-          const loadId = await getNextLoadId();
-          payload.append("loadId", loadId);
-
-          await fetch(WEBAPP_URL, {
-            method: "POST",
-            mode: "no-cors",
-            body: payload
-          });
-
-          alert("Load submitted! Your Load ID is " + loadId + ". Check your email for your private Bid Access PIN.");
-          form.reset();
-
-          setTimeout(() => {
-            loadOpenLoads();
-          }, 1500);
-
-        } catch (err) {
-          console.error("Submit load failed:", err);
-          alert("Load submit failed. Please try again.");
-        } finally {
-          if (submitButton) submitButton.disabled = false;
-        }
-      });
+    if (action === "confirmcheckout") {
+      return jsonOutput(confirmCheckout_(params));
     }
 
-    // ===== Submit Bid =====
-    function wireBidForm() {
-      const form = document.getElementById("bidForm");
-      if (!form) return;
+    return jsonOutput({ ok: false, error: "Unknown action: " + action });
+  } catch (err) {
+    return jsonOutput({ ok: false, error: String(err && err.message ? err.message : err) });
+  }
+}
 
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
+// ---- POST ----
+function doPost(e) {
+  try {
+    const data = getPostData_(e);
+    const action = String(data.action || "").toLowerCase();
 
-        const loadNum = document.getElementById("bidLoadNum").value;
-        const loadId = "LOAD-" + String(loadNum).padStart(3, "0");
-
-        const payload = new URLSearchParams();
-        payload.append("action", "addbid");
-        payload.append("loadId", loadId);
-        payload.append("driverName", document.getElementById("driverName").value.trim());
-        payload.append("phone", document.getElementById("driverPhone").value.trim());
-        payload.append("driverEmail", document.getElementById("driverEmail").value.trim());
-        payload.append("companyName", document.getElementById("driverCompany").value.trim());
-        payload.append("dotNumber", document.getElementById("dotNumber").value.trim());
-        payload.append("mcNumber", document.getElementById("mcNumber").value.trim());
-        payload.append("vehicleType", document.getElementById("vehicleType").value);
-        payload.append("legalConfirm", document.getElementById("legalConfirm").checked ? "YES" : "");
-        payload.append("bidAmount", document.getElementById("bidAmount").value.trim());
-        payload.append("notes", document.getElementById("bidNotes").value.trim());
-
-        await fetch(WEBAPP_URL, {
-          method: "POST",
-          mode: "no-cors",
-          body: payload
-        });
-
-        alert("Bid submitted!");
-        form.reset();
-      });
+    if (action === "addload") {
+      return jsonOutput(addLoad_(data));
     }
 
-    // ===== Lead Capture =====
-    function wireLeadForm() {
-      const form = document.getElementById("leadForm");
-      if (!form) return;
-
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const submitButton = form.querySelector('button[type="submit"]');
-        const message = document.getElementById("leadMessage");
-
-        const payload = new URLSearchParams();
-        payload.append("action", "addlead");
-        payload.append("name", document.getElementById("leadName").value.trim());
-        payload.append("email", document.getElementById("leadEmail").value.trim());
-        payload.append("role", document.getElementById("leadRole").value);
-        payload.append("consent", document.getElementById("leadConsent").checked ? "YES" : "");
-        payload.append("source", "Website updates form");
-
-        try {
-          if (submitButton) submitButton.disabled = true;
-
-          await fetch(WEBAPP_URL, {
-            method: "POST",
-            mode: "no-cors",
-            body: payload
-          });
-
-          if (message) message.textContent = "Thanks. You are on the BidAndTruckIt update list.";
-          form.reset();
-        } catch (err) {
-          console.error("Lead submit failed:", err);
-          if (message) message.textContent = "Could not join the list. Please try again.";
-        } finally {
-          if (submitButton) submitButton.disabled = false;
-        }
-      });
+    if (action === "addbid") {
+      return jsonOutput(addBid_(data));
     }
 
-    // ===== View Bids =====
-    async function showBidsForLoad() {
-      const loadId = "LOAD-" + document.getElementById("customerLoadId").value.padStart(3, "0");
-      const pin = document.getElementById("customerLoadPin").value.trim();
-
-      if (!pin) {
-        document.getElementById("bidResults").innerHTML = "<p>Please enter the private Bid Access PIN from your load confirmation email.</p>";
-        return;
-      }
-
-      const res = await fetch(WEBAPP_URL + "?action=bids&loadId=" + encodeURIComponent(loadId) + "&pin=" + encodeURIComponent(pin));
-      const data = await res.json();
-
-      if (!Array.isArray(data)) {
-        document.getElementById("bidResults").innerHTML = "<p>" + (data.error || "Could not load bids.") + "</p>";
-        return;
-      }
-
-      const bids = data;
-
-      let html = "<h3>Bids Received</h3>";
-
-      if (!bids.length) {
-        html += "<p>No bids found for this load yet.</p>";
-      }
-
-      bids.forEach((bid) => {
-        // Bids: 0 ts, 1 loadId, 2 driver, 3 phone, 4 amount, 5 notes, 6 status, 7 email
-        const decision = bid[6] || "";
-
-        let actionHtml = `<button class="btn" onclick="acceptBid('${bid[1]}','${bid[2]}')">Accept Bid</button>`;
-        if (decision === "ACCEPTED") actionHtml = "<p><b>Status:</b> ACCEPTED</p>";
-        if (decision === "REJECTED") actionHtml = "<p><b>Status:</b> REJECTED</p>";
-
-        html += `
-          <div class="card">
-            <p><b>Driver:</b> ${bid[2]}</p>
-            <p><b>Phone:</b> ${bid[3]}</p>
-            <p><b>Email:</b> ${bid[7] || ""}</p>
-            <p><b>Company:</b> ${bid[8] || ""}</p>
-            <p><b>DOT Number:</b> ${bid[9] || ""}</p>
-            <p><b>MC Number:</b> ${bid[10] || "Not provided"}</p>
-            <p><b>Vehicle / Trailer:</b> ${bid[11] || ""}</p>
-            <p><b>Legal / Insured Confirmed:</b> ${bid[12] || ""}</p>
-            <p><b>Bid Amount:</b> ${bid[4]}</p>
-            <p><b>Notes:</b> ${bid[5]}</p>
-            ${actionHtml}
-          </div>
-        `;
-      });
-
-      document.getElementById("bidResults").innerHTML = html;
+    if (action === "acceptbid") {
+      return jsonOutput(acceptBid_(data));
     }
 
-    async function acceptBid(loadId, driverName) {
-      const pin = document.getElementById("customerLoadPin").value.trim();
-
-      if (!pin) {
-        alert("Please enter the private Bid Access PIN from your load confirmation email.");
-        return;
-      }
-
-      const payload = new URLSearchParams();
-      payload.append("action", "acceptbid");
-      payload.append("loadId", loadId);
-      payload.append("driverName", driverName);
-      payload.append("pin", pin);
-
-      await fetch(WEBAPP_URL, {
-        method: "POST",
-        mode: "no-cors",
-        body: payload
-      });
-
-      alert("Bid accept request sent.");
-      showBidsForLoad();
-      loadOpenLoads();
+    if (action === "addlead") {
+      return jsonOutput(addLead_(data));
     }
 
-    // ===== Init =====
-    document.addEventListener("DOMContentLoaded", () => {
-      wireLoadForm();
-      wireBidForm();
-      wireLeadForm();
-      loadOpenLoads();
+    return jsonOutput({ ok: false, error: "Unknown or missing action" });
+  } catch (err) {
+    return jsonOutput({ ok: false, error: String(err && err.message ? err.message : err) });
+  }
+}
+
+// ---- Core logic ----
+
+// Loads sheet expected columns:
+// 0 Timestamp
+// 1 Load ID
+// 2 Customer Name
+// 3 Customer Email
+// 4 Customer Phone
+// 5 Pickup City/State
+// 6 Delivery City/State
+// 7 Item Type
+// 8 Weight
+// 9 Delivery Date
+// 10 Status (OPEN/COMPLETED)
+// 11 Winner Name
+// 12 Winner Phone
+// 13 Winner Bid Amount
+function getOpenLoads_() {
+  const sh = getSheet_(LOADS_SHEET_NAME);
+  const values = getAllValues_(sh);
+  if (values.length <= 1) return [];
+
+  const rows = values.slice(1);
+  return rows.filter(r => normalizeStatus(r[10]) === "OPEN");
+}
+
+function addLead_(data) {
+  const sh = ensureLeadsHeaders_();
+
+  const name = String(data.name || "").trim();
+  const email = String(data.email || "").trim();
+  const role = String(data.role || "").trim();
+  const consent = String(data.consent || "").trim().toUpperCase();
+  const source = String(data.source || "Website lead form").trim();
+
+  if (!email) return { ok: false, error: "Missing email" };
+  if (consent !== "YES") return { ok: false, error: "Marketing consent is required" };
+
+  sh.appendRow([
+    new Date(),
+    name,
+    email,
+    role,
+    consent,
+    source
+  ]);
+
+  return { ok: true };
+}
+
+// Bids sheet expected columns:
+// 0 Timestamp
+// 1 Load ID
+// 2 Driver Name
+// 3 Driver Phone
+// 4 Bid Amount
+// 5 Notes
+// 6 Status (PENDING/ACCEPTED/REJECTED)
+// 7 Driver Email
+// 8 Company Name
+// 9 DOT Number
+// 10 MC Number
+// 11 Vehicle / Trailer Type
+// 12 Legal / Insured Confirmed
+function ensureBidsHeaders_() {
+  const sh = getSheet_(BIDS_SHEET_NAME);
+  sh.getRange(1, 9, 1, 5).setValues([[
+    "Company Name",
+    "DOT Number",
+    "MC Number",
+    "Vehicle / Trailer Type",
+    "Legal / Insured Confirmed"
+  ]]);
+  return sh;
+}
+
+function getBidsForLoad_(loadId, accessPin) {
+  const pinCheck = verifyLoadPin_(loadId, accessPin);
+  if (!pinCheck.ok) return pinCheck;
+
+  const sh = ensureBidsHeaders_();
+  const values = getAllValues_(sh);
+  if (values.length <= 1) return [];
+
+  const rows = values.slice(1);
+  return rows.filter(r => normalizeLoadId(r[1]) === loadId);
+}
+
+function addLoad_(data) {
+  const sh = getSheet_(LOADS_SHEET_NAME);
+
+  const loadId = makeNextLoadId_();
+  const customerName = String(data.customerName || "");
+  const customerEmail = String(data.customerEmail || "");
+  const customerPhone = String(data.customerPhone || "");
+  const pickup = String(data.pickup || "");
+  const delivery = String(data.delivery || "");
+  const itemType = String(data.itemType || "");
+  const weight = String(data.weight || "");
+  const deliveryDate = String(data.deliveryDate || "");
+  const accessPin = makeAccessPin_();
+
+  const row = [
+    new Date(),
+    loadId,
+    customerName,
+    customerEmail,
+    customerPhone,
+    pickup,
+    delivery,
+    itemType,
+    weight,
+    deliveryDate,
+    "OPEN",
+    "",
+    "",
+    ""
+  ];
+
+  sh.appendRow(row);
+  saveLoadPin_(loadId, customerEmail, accessPin);
+
+  const emailResult = sendEmailSafe_({
+    to: customerEmail,
+    subject: "Your BidAndTruckIt load was posted: " + loadId,
+    body:
+      "Your load was posted successfully.\n\n" +
+      "Load ID: " + loadId + "\n" +
+      "Private Bid Access PIN: " + accessPin + "\n\n" +
+      "Item Type: " + itemType + "\n" +
+      "Route: " + pickup + " to " + delivery + "\n" +
+      "Weight: " + weight + "\n" +
+      "Delivery Date: " + deliveryDate + "\n\n" +
+      "Truckers can now bid on this load at BidAndTruckIt.com.\n\n" +
+      "Keep your private PIN. You will need it to view or accept bids for this load.",
+    htmlBody:
+      "<p>Your load was posted successfully.</p>" +
+      "<p><b>Load ID:</b> " + loadId + "<br>" +
+      "<b>Private Bid Access PIN:</b> " + accessPin + "</p>" +
+      "<p>Keep your private PIN. You will need it to view or accept bids for this load.</p>" +
+      "<p><b>Item Type:</b> " + itemType + "<br>" +
+      "<b>Route:</b> " + pickup + " to " + delivery + "<br>" +
+      "<b>Weight:</b> " + weight + "<br>" +
+      "<b>Delivery Date:</b> " + deliveryDate + "</p>" +
+      "<p>Truckers can now bid on this load at BidAndTruckIt.com.</p>"
+  });
+
+  return { ok: true, loadId: loadId, customerEmail: emailResult };
+}
+
+function addBid_(data) {
+  const sh = ensureBidsHeaders_();
+
+  const loadId = normalizeLoadId(data.loadId);
+  if (!loadId) return { ok: false, error: "Missing loadId" };
+
+  const bidAmountRaw = data.bidAmount;
+  const bidAmount = (bidAmountRaw === 0 || bidAmountRaw) ? String(bidAmountRaw) : "";
+  const driverPhone = data.driverPhone || data.phone || "";
+  const driverName = String(data.driverName || "");
+  const driverEmail = String(data.driverEmail || "");
+  const companyName = String(data.companyName || "");
+  const dotNumber = String(data.dotNumber || "");
+  const mcNumber = String(data.mcNumber || "");
+  const vehicleType = String(data.vehicleType || "");
+  const legalConfirm = String(data.legalConfirm || "");
+
+  const row = [
+    new Date(),
+    loadId,
+    driverName,
+    String(driverPhone || ""),
+    bidAmount,
+    String(data.notes || ""),
+    "PENDING",
+    driverEmail,
+    companyName,
+    dotNumber,
+    mcNumber,
+    vehicleType,
+    legalConfirm
+  ];
+
+  sh.appendRow(row);
+
+  const bidderEmailResult = sendEmailSafe_({
+    to: driverEmail,
+    subject: "Your BidAndTruckIt bid was submitted for " + loadId,
+    body:
+      "Your bid was submitted successfully.\n\n" +
+      "Load ID: " + loadId + "\n" +
+      "Bid Amount: " + bidAmount + "\n\n" +
+      "Company: " + companyName + "\n" +
+      "DOT Number: " + dotNumber + "\n" +
+      "MC Number: " + (mcNumber || "Not provided") + "\n" +
+      "Vehicle / Trailer: " + vehicleType + "\n\n" +
+      "You will receive another email if your bid is accepted.\n\n" +
+      "If your bid is selected, you may be asked to provide proof of insurance and carrier details before booking is finalized. BidAndTruckIt aims to review verification within 8 business hours.",
+    htmlBody:
+      "<p>Your bid was submitted successfully.</p>" +
+      "<p><b>Load ID:</b> " + loadId + "<br>" +
+      "<b>Bid Amount:</b> " + bidAmount + "</p>" +
+      "<p><b>Company:</b> " + companyName + "<br>" +
+      "<b>DOT Number:</b> " + dotNumber + "<br>" +
+      "<b>MC Number:</b> " + (mcNumber || "Not provided") + "<br>" +
+      "<b>Vehicle / Trailer:</b> " + vehicleType + "</p>" +
+      "<p>You will receive another email if your bid is accepted.</p>" +
+      "<p>If your bid is selected, you may be asked to provide proof of insurance and carrier details before booking is finalized. BidAndTruckIt aims to review verification within 8 business hours.</p>"
+  });
+
+  const load = findLoadById_(loadId);
+  let emailResult = { sent: false, error: "Load not found for customer email" };
+
+  if (load) {
+    const loadRow = load.row;
+    const customerEmail = String(loadRow[3] || "").trim();
+    const pickup = String(loadRow[5] || "").trim();
+    const delivery = String(loadRow[6] || "").trim();
+    const itemType = String(loadRow[7] || "").trim();
+
+    emailResult = sendEmailSafe_({
+      to: customerEmail,
+      subject: "New bid received for " + loadId,
+      body:
+        "You received a new bid on " + loadId + ".\n\n" +
+        "Load: " + itemType + "\n" +
+        "Route: " + pickup + " to " + delivery + "\n\n" +
+        "Driver: " + driverName + "\n" +
+        "Company: " + companyName + "\n" +
+        "DOT Number: " + dotNumber + "\n" +
+        "MC Number: " + (mcNumber || "Not provided") + "\n" +
+        "Vehicle / Trailer: " + vehicleType + "\n" +
+        "Legal / Insured Confirmed: " + legalConfirm + "\n" +
+        "Bid Amount: " + bidAmount + "\n\n" +
+        "Driver phone and email are released after the booking fee is paid.\n\n" +
+        "Go to BidAndTruckIt and use your load number and private PIN to view or accept the bid.",
+      htmlBody:
+        "<p>You received a new bid on <b>" + loadId + "</b>.</p>" +
+        "<p><b>Load:</b> " + itemType + "<br>" +
+        "<b>Route:</b> " + pickup + " to " + delivery + "</p>" +
+        "<p><b>Driver:</b> " + driverName + "<br>" +
+        "<b>Company:</b> " + companyName + "<br>" +
+        "<b>DOT Number:</b> " + dotNumber + "<br>" +
+        "<b>MC Number:</b> " + (mcNumber || "Not provided") + "<br>" +
+        "<b>Vehicle / Trailer:</b> " + vehicleType + "<br>" +
+        "<b>Legal / Insured Confirmed:</b> " + legalConfirm + "<br>" +
+        "<b>Bid Amount:</b> " + bidAmount + "</p>" +
+        "<p>Driver phone and email are released after the booking fee is paid.</p>" +
+        "<p>Go to BidAndTruckIt and use your load number and private PIN to view or accept the bid.</p>"
     });
-  </script>
-</body>
-</html>
+  }
+
+  return { ok: true, loadId: loadId, bidderEmail: bidderEmailResult, customerEmail: emailResult };
+}
+
+function acceptBid_(data) {
+  return { ok: false, error: "Payment is required before accepting a bid. Please use Pay Booking Fee." };
+}
+
+function acceptBidCore_(data) {
+  const loadId = normalizeLoadId(data.loadId);
+  if (!loadId) return { ok: false, error: "Missing loadId" };
+
+  const requestedDriverPhone = String(data.driverPhone || data.phone || "").trim();
+  const requestedDriverName = String(data.driverName || "").trim();
+
+  if (!requestedDriverPhone && !requestedDriverName) {
+    return { ok: false, error: "Missing driverPhone or driverName" };
+  }
+
+  const bidsSh = getSheet_(BIDS_SHEET_NAME);
+  const bidsValues = getAllValues_(bidsSh);
+  if (bidsValues.length <= 1) return { ok: false, error: "Bids sheet is empty" };
+
+  const bidsRows = bidsValues.slice(1);
+  let acceptedCount = 0;
+  let winnerName = requestedDriverName;
+  let winnerPhone = requestedDriverPhone;
+  let winnerBidAmount = String(data.bidAmount || "").trim();
+  let winnerEmail = "";
+
+  for (let i = 0; i < bidsRows.length; i++) {
+    const r = bidsRows[i];
+    const rLoadId = normalizeLoadId(r[1]);
+    if (rLoadId !== loadId) continue;
+
+    const rDriverName = String(r[2] || "").trim();
+    const rDriverPhone = String(r[3] || "").trim();
+    const rBidAmount = String(r[4] || "").trim();
+    const rDriverEmail = String(r[7] || "").trim();
+    const bidSheetRow = i + 2;
+
+    const phoneMatches = requestedDriverPhone && rDriverPhone === requestedDriverPhone;
+    const nameMatches = !requestedDriverPhone && requestedDriverName && rDriverName === requestedDriverName;
+
+    if (phoneMatches || nameMatches) {
+      bidsSh.getRange(bidSheetRow, 7).setValue("ACCEPTED");
+      acceptedCount++;
+      winnerName = rDriverName;
+      winnerPhone = rDriverPhone;
+      winnerBidAmount = rBidAmount;
+      winnerEmail = rDriverEmail;
+    } else {
+      bidsSh.getRange(bidSheetRow, 7).setValue("REJECTED");
+    }
+  }
+
+  if (acceptedCount === 0) {
+    return { ok: false, error: "No matching bid found to accept" };
+  }
+
+  const loadsSh = getSheet_(LOADS_SHEET_NAME);
+  const loadsValues = getAllValues_(loadsSh);
+  if (loadsValues.length <= 1) return { ok: false, error: "Loads sheet is empty" };
+
+  const loadsRows = loadsValues.slice(1);
+  let loadRowIndex = -1;
+
+  for (let i = 0; i < loadsRows.length; i++) {
+    if (normalizeLoadId(loadsRows[i][1]) === loadId) {
+      loadRowIndex = i;
+      break;
+    }
+  }
+
+  if (loadRowIndex === -1) return { ok: false, error: "Load not found: " + loadId };
+
+  const sheetRow = loadRowIndex + 2;
+  const winningLoadRow = loadsRows[loadRowIndex];
+  const customerName = String(winningLoadRow[2] || "").trim();
+  const customerEmail = String(winningLoadRow[3] || "").trim();
+  const customerPhone = String(winningLoadRow[4] || "").trim();
+  const pickup = String(winningLoadRow[5] || "").trim();
+  const delivery = String(winningLoadRow[6] || "").trim();
+  const itemType = String(winningLoadRow[7] || "").trim();
+
+  loadsSh.getRange(sheetRow, 11).setValue("COMPLETED");
+  loadsSh.getRange(sheetRow, 12).setValue(winnerName);
+  loadsSh.getRange(sheetRow, 13).setValue(winnerPhone);
+  loadsSh.getRange(sheetRow, 14).setValue(winnerBidAmount);
+
+  const acceptedEmail = sendEmailSafe_({
+    to: winnerEmail,
+    subject: "Your bid was accepted for " + loadId,
+    body:
+      "Good news. Your bid was accepted for " + loadId + ".\n\n" +
+      "Winning Bid: " + winnerBidAmount + "\n\n" +
+      "Shipper: " + customerName + "\n" +
+      "Shipper Phone: " + customerPhone + "\n" +
+      "Shipper Email: " + customerEmail + "\n" +
+      "Route: " + pickup + " to " + delivery + "\n\n" +
+      "Please contact the shipper to confirm pickup and delivery details.",
+    htmlBody:
+      "<p>Good news. Your bid was accepted for <b>" + loadId + "</b>.</p>" +
+      "<p><b>Winning Bid:</b> " + winnerBidAmount + "</p>" +
+      "<p><b>Shipper:</b> " + customerName + "<br>" +
+      "<b>Shipper Phone:</b> " + customerPhone + "<br>" +
+      "<b>Shipper Email:</b> " + customerEmail + "<br>" +
+      "<b>Route:</b> " + pickup + " to " + delivery + "</p>" +
+      "<p>Please contact the shipper to confirm pickup and delivery details.</p>"
+  });
+
+  const customerAcceptedEmail = sendEmailSafe_({
+    to: customerEmail,
+    subject: "Booking fee paid and bid accepted for " + loadId,
+    body:
+      "Your booking fee was received and your selected bid is now accepted.\n\n" +
+      "Load ID: " + loadId + "\n" +
+      "Load: " + itemType + "\n" +
+      "Route: " + pickup + " to " + delivery + "\n\n" +
+      "Accepted Driver: " + winnerName + "\n" +
+      "Driver Phone: " + winnerPhone + "\n" +
+      "Driver Email: " + winnerEmail + "\n" +
+      "Winning Bid: " + winnerBidAmount + "\n\n" +
+      "Please contact the driver to confirm pickup and delivery details.",
+    htmlBody:
+      "<p>Your booking fee was received and your selected bid is now accepted.</p>" +
+      "<p><b>Load ID:</b> " + loadId + "<br>" +
+      "<b>Load:</b> " + itemType + "<br>" +
+      "<b>Route:</b> " + pickup + " to " + delivery + "</p>" +
+      "<p><b>Accepted Driver:</b> " + winnerName + "<br>" +
+      "<b>Driver Phone:</b> " + winnerPhone + "<br>" +
+      "<b>Driver Email:</b> " + winnerEmail + "<br>" +
+      "<b>Winning Bid:</b> " + winnerBidAmount + "</p>" +
+      "<p>Please contact the driver to confirm pickup and delivery details.</p>"
+  });
+
+  return { ok: true, loadId: loadId, acceptedCount: acceptedCount, winnerEmail: acceptedEmail, customerEmail: customerAcceptedEmail };
+}
+
+function createCheckout_(data) {
+  const stripeKey = getStripeSecretKey_();
+  if (!stripeKey) {
+    return { ok: false, error: "Missing STRIPE_SECRET_KEY in Apps Script project settings." };
+  }
+
+  const loadId = normalizeLoadId(data.loadId);
+  const pinCheck = verifyLoadPin_(loadId, data.pin || data.accessPin || "");
+  if (!pinCheck.ok) return pinCheck;
+
+  const requestedDriverName = String(data.driverName || "").trim();
+  const requestedDriverPhone = String(data.driverPhone || data.phone || "").trim();
+  const bid = findBidForCheckout_(loadId, requestedDriverName, requestedDriverPhone);
+  if (!bid) return { ok: false, error: "No matching bid found for payment." };
+
+  const bidCents = parseMoneyToCents_(bid.bidAmount);
+  if (bidCents <= 0) return { ok: false, error: "Bid amount is missing or invalid." };
+
+  const feeCents = Math.max(MIN_BOOKING_FEE_CENTS, Math.round(bidCents * BOOKING_FEE_PERCENT));
+  const successUrl = SITE_URL + "?stripe=success&session_id={CHECKOUT_SESSION_ID}#view-bids";
+  const cancelUrl = SITE_URL + "#view-bids";
+  const load = findLoadById_(loadId);
+  if (!load) return { ok: false, error: "Load not found: " + loadId };
+
+  const response = UrlFetchApp.fetch("https://api.stripe.com/v1/checkout/sessions", {
+    method: "post",
+    muteHttpExceptions: true,
+    headers: {
+      Authorization: "Bearer " + stripeKey
+    },
+    payload: {
+      mode: "payment",
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      customer_email: String(load.row[3] || "").trim(),
+      client_reference_id: loadId,
+      "line_items[0][price_data][currency]": "usd",
+      "line_items[0][price_data][unit_amount]": String(feeCents),
+      "line_items[0][price_data][product_data][name]": "BidAndTruckIt booking fee for " + loadId,
+      "line_items[0][price_data][product_data][description]": "10% booking fee for accepted bid " + bid.bidAmount,
+      "line_items[0][quantity]": "1",
+      "metadata[loadId]": loadId,
+      "metadata[driverName]": bid.driverName,
+      "metadata[driverPhone]": bid.driverPhone,
+      "metadata[bidAmount]": bid.bidAmount,
+      "metadata[bookingFeeCents]": String(feeCents)
+    }
+  });
+
+  const statusCode = response.getResponseCode();
+  const body = response.getContentText();
+  const session = JSON.parse(body);
+
+  if (statusCode < 200 || statusCode >= 300 || !session.url) {
+    return { ok: false, error: session.error && session.error.message ? session.error.message : body };
+  }
+
+  ensurePaymentsHeaders_().appendRow([
+    new Date(),
+    loadId,
+    bid.driverName,
+    bid.driverPhone,
+    bid.bidAmount,
+    feeCents,
+    session.id,
+    "CHECKOUT_CREATED",
+    "",
+    ""
+  ]);
+
+  return {
+    ok: true,
+    loadId: loadId,
+    checkoutUrl: session.url,
+    sessionId: session.id,
+    bookingFeeCents: feeCents,
+    bookingFee: formatCents_(feeCents)
+  };
+}
+
+function confirmCheckout_(data) {
+  const stripeKey = getStripeSecretKey_();
+  if (!stripeKey) {
+    return { ok: false, error: "Missing STRIPE_SECRET_KEY in Apps Script project settings." };
+  }
+
+  const sessionId = String(data.sessionId || data.session_id || "").trim();
+  if (!sessionId) return { ok: false, error: "Missing Stripe session ID" };
+
+  const paymentsSh = ensurePaymentsHeaders_();
+  const payments = getAllValues_(paymentsSh);
+  let paymentRowNumber = -1;
+  let alreadyAccepted = false;
+
+  for (let i = 1; i < payments.length; i++) {
+    if (String(payments[i][6] || "").trim() === sessionId) {
+      paymentRowNumber = i + 1;
+      alreadyAccepted = !!payments[i][8];
+      break;
+    }
+  }
+
+  const response = UrlFetchApp.fetch("https://api.stripe.com/v1/checkout/sessions/" + encodeURIComponent(sessionId), {
+    method: "get",
+    muteHttpExceptions: true,
+    headers: {
+      Authorization: "Bearer " + stripeKey
+    }
+  });
+
+  const statusCode = response.getResponseCode();
+  const body = response.getContentText();
+  const session = JSON.parse(body);
+
+  if (statusCode < 200 || statusCode >= 300) {
+    return { ok: false, error: session.error && session.error.message ? session.error.message : body };
+  }
+
+  const paymentStatus = String(session.payment_status || "").toLowerCase();
+  if (paymentRowNumber > 0) {
+    paymentsSh.getRange(paymentRowNumber, 8).setValue(session.payment_status || "");
+  }
+
+  if (paymentStatus !== "paid") {
+    return { ok: false, error: "Stripe payment is not marked paid yet.", paymentStatus: session.payment_status || "" };
+  }
+
+  const metadata = session.metadata || {};
+  const loadId = normalizeLoadId(metadata.loadId);
+  const driverName = String(metadata.driverName || "").trim();
+  const driverPhone = String(metadata.driverPhone || "").trim();
+
+  if (alreadyAccepted) {
+    return { ok: true, loadId: loadId, alreadyAccepted: true, paymentStatus: session.payment_status };
+  }
+
+  const accepted = acceptBidCore_({
+    loadId: loadId,
+    driverName: driverName,
+    driverPhone: driverPhone
+  });
+
+  if (paymentRowNumber > 0 && accepted.ok) {
+    paymentsSh.getRange(paymentRowNumber, 9).setValue(new Date());
+  }
+
+  return Object.assign({}, accepted, {
+    paymentStatus: session.payment_status,
+    stripeSessionId: sessionId
+  });
+}
